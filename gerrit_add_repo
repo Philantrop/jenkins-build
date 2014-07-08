@@ -1,0 +1,234 @@
+source /srv/tomcat/bin/data
+
+#USER=""
+#REPOPATH=""
+#GERRIT_SERVER=""
+
+REPO_URI=$1
+REPO_NAME=$2
+
+if [[ -z ${REPO_URI} || -z ${REPO_NAME} ]]; then
+   echo "$0 <REPO_URI> <REPO_NAME> [REPO_STATE (ACTIVE)] [REPO_OWNER (empty; e. g. "Peter \"Piper\" Pan")] [REPO_OWNER_EMAIL (empty)]"
+   exit 1
+fi
+
+case "${REPO_URI}" in
+     *github*)
+        HOSTER=github.com
+     ;;
+     *gitorious*)
+        HOSTER=gitorious.org
+     ;;
+     *git.exherbo.org*)
+	HOSTER=Exherbo
+     ;;
+     *)
+        echo "Unknown hoster"
+	exit 3
+     ;;
+esac
+
+case "${REPO_URI}" in
+     *git.exherbo.org/*)
+        REPLICATION_GROUP=official
+     ;;
+     *git.exherbo.org/dev/*)
+        REPLICATION_GROUP=dev
+     ;;
+     *)
+        echo "Unknown replication group"
+        exit 4
+     ;;
+esac
+
+
+
+# ACTIVE: project is regular and is the default value.
+# READ_ONLY: users can see the project if read permission is granted, but all modification operations are disabled.
+# HIDDEN: the project is not visible for those who are not owners
+
+if [[ -z $3 ]]; then
+   REPO_STATE="ACTIVE"
+else
+   REPO_STATE=$3
+fi
+
+if [[ -n $4 && -n $5 ]]; then
+   REPO_OWNER=$4
+   REPO_OWNER_EMAIL=$5
+fi
+
+cd "${REPOPATH}"
+
+git clone --bare "${REPO_URI}" "${REPO_NAME}"
+
+if [[ ! -d ${REPOPATH}/${REPO_NAME} ]]; then
+   echo "cloning failed"
+   exit 2
+fi
+
+sudo chown -R ${USER}:${GROUP} "${REPO_NAME}"
+sudo chmod -R a+rwx "${REPO_NAME}"
+
+ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit flush-caches --cache project_list
+ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit set-project --submit-type REBASE_IF_NECESSARY --ps "${REPO_STATE}"  "${REPO_NAME}"
+ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit flush-caches --cache project_list
+
+if [[ -z ${REPO_OWNER} ]]; then
+   pushd /tmp
+
+   if [[ ! $(ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-projects | grep "^${REPO_NAME//.git}$") ]]; then
+      echo "repo not on Gerrit yet"
+      sleep 1
+      ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit flush-caches --cache project_list
+      sleep 1
+   fi   
+
+   git clone "${GERRIT_SERVER}"/"${REPO_NAME}" "${REPO_NAME}"
+   cd "${REPO_NAME}"
+   git fetch origin +refs/meta/*:refs/remotes/origin/*
+   git checkout -b config --track origin/config
+
+cat <<EOF > project.config
+[submit]
+        action = rebase if necessary
+[access "refs/heads/*"]
+        read = group Exherbo-${REPLICATION_GROUP}-replication
+EOF
+
+   mysql -u ${MYSQL_USER} -p${MYSQL_PWD} ${MYSQL_DB} --skip-column-names -B -e "SELECT group_uuid, name FROM account_groups WHERE name in (\"Exherbo-${REPLICATION_GROUP}-replication\")" >>groups
+
+   git add project.config groups
+   git cm -m "Initial project config"
+   git push origin HEAD:refs/meta/config
+
+   cd /tmp
+
+   rm -rf "${REPO_NAME}"
+
+   popd
+
+   sudo chown -R ${USER}:${GROUP} "${REPO_NAME}"
+   sudo chmod -R a+rwx "${REPO_NAME}"
+
+elif [[ -n ${REPO_OWNER} ]]; then
+   
+   ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit create-group \
+       --description "'For ownership of ${REPO_NAME}'" \
+       --member "${REPO_OWNER_EMAIL}" "'${REPO_OWNER}'"
+
+   ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit create-group \
+       --description "'Replication-only group for ${REPO_OWNER} repos on ${HOSTER}. Do not touch this, do not add anyone to it.'" \
+       --member "philantrop@exherbo.org" "'Exherbo-${HOSTER}-${REPO_NAME}-replication'"
+
+   pushd /tmp
+
+   if [[ ! $(ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-projects | grep "^${REPO_NAME//.git}$") ]]; then
+      echo "repo not on Gerrit yet"
+      sleep 1
+      ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit flush-caches --cache project_list
+      sleep 1
+   fi
+
+   git clone "${REPO_URI}" "${REPO_NAME}"
+   cd "${REPO_NAME}"
+   git fetch origin +refs/meta/*:refs/remotes/origin/*
+   git checkout -b config --track origin/config
+
+cat <<EOF > project.config
+[submit]
+        action = rebase if necessary
+[access "refs/heads/*"]
+        owner = group ${REPO_OWNER}
+        read = group Exherbo-${HOSTER}-${REPO_NAME}-replication
+        read = group ${REPO_OWNER}
+        abandon = group ${REPO_OWNER}
+        create = group ${REPO_OWNER}
+        forgeAuthor = group ${REPO_OWNER}
+        forgeCommitter = group ${REPO_OWNER}
+        forgeServerAsCommitter = group ${REPO_OWNER}
+        push = group ${REPO_OWNER}
+        pushMerge = group ${REPO_OWNER}
+        pushTag = group ${REPO_OWNER}
+        pushSignedTag = group ${REPO_OWNER}
+        label-Code-Review = -2..+2 group ${REPO_OWNER}
+        labelAs-Code-Review = -2..+2 group ${REPO_OWNER}
+        rebase = group ${REPO_OWNER}
+        removeReviewer = group ${REPO_OWNER}
+        submit = group ${REPO_OWNER}
+        viewDrafts = group ${REPO_OWNER}
+        editTopicName = group ${REPO_OWNER}
+        deleteDrafts = group ${REPO_OWNER}
+        publishDrafts = group ${REPO_OWNER}
+EOF
+
+   mysql -u ${MYSQL_USER} -p${MYSQL_PWD} ${MYSQL_DB} --skip-column-names -B -e "SELECT group_uuid, name FROM account_groups WHERE name in (\"Exherbo-${REPLICATION_GROUP}-replication\", \"${REPO_OWNER}\", \"Exherbo-${HOSTER}-${REPO_NAME}-replication\" )" >>groups
+
+   git add project.config groups
+   git cm -m "Initial project config"
+   git push origin HEAD:refs/meta/config
+
+   cd /tmp
+
+   rm -rf "${REPO_NAME}"
+
+   popd
+
+   sudo chown -R ${USER}:${GROUP} "${REPO_NAME}"
+   sudo chmod -R a+rwx "${REPO_NAME}"
+
+   pushd /var/cache/tomcat/gerrit/etc
+
+   cat <<EOF > /tmp/replication.config
+# -----FIX THE URL LINE BELOW AND DELETE THIS LINE ------------
+[remote "Exherbo-${HOSTER}-${REPO_NAME}"]
+  url = git@${HOSTER}:${name}/${name}-exheres.git
+  push = refs/heads/*:refs/heads/*
+  timeout = 15
+  replicationDelay = 0
+  replicatePermissions = false
+  createMissingRepositories = false
+  threads = 4
+  authGroup = Exherbo-${HOSTER}-${REPO_NAME}-replication
+# -----FIX THE URL LINE ABOVE AND DELETE THIS LINE ------------
+
+EOF
+
+   cat /tmp/replication.config >>replication.config
+   emacs -nw replication.config
+
+   # CAREFUL! The hostname in the next line MUST be "localhost"!
+   ssh -p ${PORT} ${SSH_USER}@localhost gerrit plugin reload replication
+
+   rm /tmp/replication.config
+
+fi
+
+
+# Add Jenkins task
+
+mkdir /tmp/jenkins
+pushd /tmp/jenkins
+wget https://${SERVER}/jenkins/jnlpJars/jenkins-cli.jar
+
+# The "philantrop" in the next line refers to the repository, not my nick. :-)
+java -jar jenkins-cli.jar -i ~/.ssh/id_dsa -s https://${SERVER}/jenkins/ copy-job philantrop ${REPO_NAME//.git}
+java -jar jenkins-cli.jar -s https://${SERVER}/jenkins/ get-job ${REPO_NAME//.git} > ${REPO_NAME//.git}.xml
+sed -i -e "s:philantrop:${REPO_NAME//.git}:g" ${REPO_NAME//.git}.xml
+java -jar jenkins-cli.jar -i ~/.ssh/id_dsa -s https://${SERVER}/jenkins/ update-job ${REPO_NAME//.git} < ${REPO_NAME//.git}.xml
+
+popd
+
+rm /tmp/jenkins
+
+systemd-nspawn --bind=/srv/www/localhost/htdocs/pbin:/var/db/paludis/repositories/pbin --bind-ro=/home/jenkins/workspace:/var/db/paludis/gerrit -D /srv/jenkins/amd64_base/amd64 -c "
+ln -s /etc/paludis/repositories/philantrop.bash /etc/paludis/repositories/${REPO_NAME//.git}.bash
+PALUDIS_DO_NOTHING_SANDBOXY=y cave search '*/*'
+
+emacs /usr/local/bin/cave_install.bash
+"
+
+sudo cp /srv/jenkins/amd64_base/amd64/usr/local/bin/cave_install.bash /srv/tomcat/bin/
+
+emacs /srv/tomcat/bin/jenkins_build.bash
+
