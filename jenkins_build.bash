@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source /srv/tomcat/bin/data
+
 #USER=""
 #PASS=""
 #SERVER=""
