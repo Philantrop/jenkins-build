@@ -86,29 +86,20 @@ if [[ -z ${GERRIT_CHANGE_NUMBER} ]]; then
     fi
 fi
 
-case "${PKG}" in
-     *::exherbo-cn*)
-	PKG=${PKG//::exherbo-cn/::exhereses-cn}
-     ;;
-     *::Playground*)
-	PKG=${PKG//::Playground/::playground}
-     ;;
-     *::AelMalinka*)
-	PKG=${PKG//::AelMalinka/::malinka}
-     ;;
-     *::SuperHeron*)
-	PKG=${PKG//::SuperHeron/::SuperHeron-misc}
-     ;;
-     *::lipidity-exheres*)
-	PKG=${PKG//::lipidity-exheres/::lipidity}
-     ;;
-     *::Bruners*)
-	PKG=${PKG//::Bruners/::bruners}
-     ;;
-     *::ocaml-unofficial*)
-	NICENESS=10
-     ;;
-esac
+PROJECT_TO_REPO=(
+    exherbo-cn:exhereses-cn
+    Playground:playground
+    AelMalinka:malinka
+    SuperHeron:SuperHeron-misc
+    lipidity-exheres:lipidity
+    Bruners:bruners
+)
+for P2R in "${PROJECT_TO_REPO[@]}"; do
+    [[ ${PKG} == *${P2R%:*}* ]] && PKG=${PKG//::${P2R%:*}/::${P2R#*:}}
+    [[ ${WORKSPACE} == *${P2R%:*}* ]] && WORKSPACE=${WORKSPACE//${P2R%:*}/${P2R#*:}}
+done
+unset P2R
+[[ "${PKG}" == *::ocaml-unofficial* ]] && NICENESS=10
 
 set -e
 

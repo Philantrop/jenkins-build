@@ -21,27 +21,6 @@ echo > ${TMPFILE}
 
 WORKSPACE=${WORKSPACE//@*}
 
-case "${WORKSPACE}" in
-     *exherbo-cn*)
-        WORKSPACE=${WORKSPACE//exherbo-cn/exhereses-cn}
-     ;;
-     *Playground*)
-        WORKSPACE=${WORKSPACE//Playground/playground}
-     ;;
-     *AelMalinka*)
-        WORKSPACE=${WORKSPACE//AelMalinka/malinka}
-     ;;
-     *SuperHeron*)
-        WORKSPACE=${WORKSPACE//SuperHeron/SuperHeron-misc}
-     ;;
-     *lipidity-exheres*)
-        WORKSPACE=${WORKSPACE//lipidity-exheres/lipidity}
-     ;;
-     *Bruners*)
-        WORKSPACE=${WORKSPACE//Bruners/bruners}
-     ;;
-esac
-
 if [[ ${PKG} == everything ]]; then
     PKG="$(cave print-ids --matching "*/*::$(basename ${WORKSPACE})" --format '%c/%p%:%s::%r\n')"
 fi
