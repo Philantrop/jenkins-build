@@ -13,11 +13,11 @@ chgrp tty /dev/tty
 source /etc/profile
 stty columns 80 rows 40
 
-[[ DEBUG -eq 1 ]] && ls /
-[[ DEBUG -eq 1 ]] && echo "TMPFILE: ${TMPFILE}"
+[[ ${DEBUG} -eq 1 ]] && ls /
+[[ ${DEBUG} -eq 1 ]] && echo "TMPFILE: ${TMPFILE}"
 
 echo > ${TMPFILE}
-[[ DEBUG -eq 1 ]] && ls -l ${TMPFILE}
+[[ ${DEBUG} -eq 1 ]] && ls -l ${TMPFILE}
 
 WORKSPACE=${WORKSPACE//@*}
 
@@ -33,8 +33,8 @@ echo "**************************************************************"
 echo cave resolve ${PKG} --display-resolution-program "cave print-resolution-required-confirmations > ${TMPFILE}"
 nice -n${NICENESS} cave resolve ${PKG} --display-resolution-program "cave print-resolution-required-confirmations > ${TMPFILE}"
 
-[[ DEBUG -eq 1 ]] && ls -l ${TMPFILE}
-[[ DEBUG -eq 1 ]] && ls -l /usr/local/bin/handle_confirmations
+[[ ${DEBUG} -eq 1 ]] && ls -l ${TMPFILE}
+[[ ${DEBUG} -eq 1 ]] && ls -l /usr/local/bin/handle_confirmations
 
 ARGS=$(/usr/local/bin/handle_confirmations < ${TMPFILE})
 if [[ "${ARGS}" == *unknown\ confirmation:* ]]; then
@@ -44,16 +44,16 @@ if [[ "${ARGS}" == *unknown\ confirmation:* ]]; then
     exit 1
 fi
 
-[[ DEBUG -eq 1 ]] && echo ARGS: ${ARGS}
+[[ ${DEBUG} -eq 1 ]] && echo ARGS: ${ARGS}
 
 echo "**************************************************************"
 echo "cave resolve command"
 echo cave resolve -zx --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS} 
 echo cave resolve -zx --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS} &> cave-resolve.txt
-[[ DEBUG -eq 0 ]] && cave resolve -zx --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS}
+[[ ${DEBUG} -eq 0 ]] && cave resolve -zx --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS}
 rc=$?
 
-if [[ rc -gt 0 ]]; then
+if [[ ${rc} -gt 0 ]]; then
     PKG=${PKG/*\/}
     find /var/tmp/paludis/build/*${PKG/::*}* -name "config.log" -exec cp {} /var/db/paludis/gerrit/$(basename ${WORKSPACE})/${BUILDNO}_config.log \;
     find /var/log/paludis -name "*${PKG/::*}*.out" -exec cp {} /var/db/paludis/gerrit/$(basename ${WORKSPACE})/${BUILDNO}_build.log \;
