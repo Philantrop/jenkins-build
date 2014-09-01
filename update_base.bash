@@ -11,7 +11,7 @@ sed -i -e "s:^\(importance =\).*:\1 -100:" /etc/paludis/repositories/pbin.conf
 sed -i -e "/\*\/\* build_options:/s:\(recommended_tests\):-\1:" /etc/paludis/options.conf
 
 # Update things
-PALUDIS_DO_NOTHING_SANDBOXY=y cave resolve world -c  --recommendations ignore  --suggestions ignore -x
+PALUDIS_DO_NOTHING_SANDBOXY=y cave resolve world -c  --recommendations ignore  --suggestions ignore --purge '*/*' -x
 rc=$?
 
 # Fix linkage
