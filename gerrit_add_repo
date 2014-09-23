@@ -41,6 +41,9 @@ case "${REPO_URI}" in
      *git.exherbo.org/*)
         REPLICATION_GROUP=official
      ;;
+     *github.com:Exherbo*)
+        REPLICATION_GROUP=Exherbo-github-replication
+     ;;
      *)
         echo "Will generate a new replication group"
      ;;
