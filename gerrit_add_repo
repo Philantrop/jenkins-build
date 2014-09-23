@@ -42,7 +42,7 @@ case "${REPO_URI}" in
         REPLICATION_GROUP=official
      ;;
      *github.com:Exherbo*)
-        REPLICATION_GROUP=Exherbo-github-replication
+        REPLICATION_GROUP=github
      ;;
      *)
         echo "Will generate a new replication group"
