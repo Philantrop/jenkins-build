@@ -48,9 +48,9 @@ fi
 
 echo "**************************************************************"
 echo "cave resolve command"
-echo cave resolve -zx --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS} 
-echo cave resolve -zx --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS} &> cave-resolve.txt
-[[ ${DEBUG} -eq 0 ]] && cave resolve -zx --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS}
+echo cave resolve -zx --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS} 
+echo cave resolve -zx --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS} &> cave-resolve.txt
+[[ ${DEBUG} -eq 0 ]] && cave resolve -zx --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS}
 rc=$?
 
 if [[ ${rc} -gt 0 ]]; then
