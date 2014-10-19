@@ -26,7 +26,7 @@ rc=$?
 sed -i -e "/\*\/\* build_options:/s:-\(recommended_tests\):\1:" /etc/paludis/options.conf 
 
 # Raise pbin importance
-sed -i -e "s:^\(importance =\).*:\1 100:" /etc/paludis/repositories/pbin.conf
+sed -i -e "s:^\(importance =\).*:\1 0:" /etc/paludis/repositories/pbin.conf
 
 eclectic --no-color config list |
     awk '$1~/^\[[[:digit:]]\]$/{print $2}' |
