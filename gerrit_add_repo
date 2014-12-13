@@ -184,7 +184,7 @@ EOF
 # Old, since 2.9 half-broken method
 #   mysql -u ${MYSQL_USER} -p${MYSQL_PWD} ${MYSQL_DB} --skip-column-names -B -e "SELECT group_uuid, name FROM account_groups;" >>groups
   
-   ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-groups -v | awk '-F\t' '{printf ($1"\t"$2"\n")}' >>groups
+   ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-groups -v | awk '-F\t' '{printf ($2"\t"$1"\n")}' >>groups
 
    git add project.config groups
    git cm -m "Initial project config"
