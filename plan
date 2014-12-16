@@ -1,0 +1,59 @@
+Current process:
+1. User submits patch on Gerrit
+2. Jenkins' Gerrit trigger sees the patch
+3. The trigger fetches the patch into ${WORKSPACE}
+4. jenkins_build.bash looks at the Gerrit change and finds out if it's an exheres, an exlib or something else that changed.
+5. If it's an exheres, it deducts the package and makes cave_install.bash install that.
+5b. Future: (Patch exists) If it's an exlib, test n packages which require the exlib
+
+Idea:
+3a. (From within the build chroot,) cave sync ${WORKSPACE} into a local paludis repository
+3b. Use some native paludis facility (or hook?) to check what changed (package or exlib)
+3c. Eliminate the above step 4 for exheres and exlibs in order to avoid wrong deductions. If step 4 concludes it's something else, bail out as it does now.
+4a. Use the output from 3b to install the verified package or packages impacted by an exlib change.
+
+
+
+Additional reading:
+[01.04.2014 17:28:28] <moben> choosing the wrong version is a problem
+[01.04.2014 17:29:37] <moben> I think the dep cycle stems from it not
+using promote-binaries (which isn't in a paludis release yet)
+[01.04.2014 17:31:31] <moben> Philantrop: ^ maybe jenkins should do
+auto-unmasking?
+[01.04.2014 17:32:39] <Philantrop> moben: It does. It can't detect
+versions from Gerrit, though.
+[01.04.2014 17:33:43] <Philantrop> moben: This is what the script does
+to find the package: PKG=$(/usr/bin/ssh -x -p 29418
+${SSH_USER}@${SERVER} -- gerrit query --files --current-patch-set
+change:${GERRIT_CHANGE_NUMBER} | awk -F/
+'$1~/project:/{repo=$0};$1~/file:\ packages/{print $2"/"$3"::"repo}' |
+sed -e 's/::  project: \(.*\)$/::\1/' | sort -u | xargs)
+[01.04.2014 17:34:21] <Philantrop> moben: Find me a way to reliably
+detect a version or a paludis function that gives me a spec from the
+path in Gerrit and I'll gladly add it.
+[01.04.2014 17:39:16] <Apetrini> uh, silly connection
+[01.04.2014 17:39:51] <moben> Philantrop: something like:   cave
+print-ids -m
+'*/*::<repo>[.EXHERES=<path-to-synced-repo>/<path-from-gerrit>]' ?
+[01.04.2014 17:40:09] <moben> Philantrop: I don't quite get the awk part
+of your line though
+[01.04.2014 17:40:19] <Philantrop> moben: Try it.
+[01.04.2014 17:43:07] <moben> oh, yaml or something
+[01.04.2014 17:43:47] <moben> Philantrop: I think my line works. just
+shove an '=' in front and you should be good to go
+[01.04.2014 17:45:22] <Philantrop> moben: It won't because the repos are
+not configured. I have to find the package from outside the build machines.
+[01.04.2014 17:46:20] <moben> Philantrop: you said "…or paludis
+function…". paludis only operates on configured repos
+[01.04.2014 17:47:12] <Philantrop> moben: There at least used to be
+no-config clients.
+[01.04.2014 17:47:28] <moben> I think that was in the pre-cave days
+[01.04.2014 17:48:50] <moben> you could create a separate paludis
+environment outside the build machines that syncs the changes from gerrit
+[01.04.2014 17:49:15] <moben> but it seems you don't want that
+[01.04.2014 17:50:50] <moben> Philantrop: But just in case, I also some
+bash that gathers all consumers of an exlib, taking into account per-cat
+and per-pkg exlibs, if you'd like.
+[01.04.2014 17:51:07] <moben> (also using cave, obviously)
+[01.04.2014 17:52:30] <Philantrop> moben: A seperate environment might
+actually work. As for that bash script, that would be nice to have, indeed.
