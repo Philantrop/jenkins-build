@@ -251,4 +251,6 @@ source /etc/profile
 
 ln -sf /etc/paludis/repositories/philantrop.bash /etc/paludis/repositories/${REPO_NAME}.bash
 "
+# keep -E :jenkins-pbins on / updated
+ln -sf philantrop.bash /etc/paludis-jenkins-pbins/repositories/${REPO_NAME}.bash
 
