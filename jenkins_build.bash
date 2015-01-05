@@ -112,7 +112,7 @@ sudo /usr/bin/systemd-nspawn \
     --bind=/srv/www/localhost/htdocs/pbin:/var/db/paludis/repositories/pbin \
     --capability=CAP_MKNOD \
     -D "${CHROOT}" /usr/local/bin/cave_install.bash \
-    ${TMPFILE} "${PKG}" ${DEBUG} ${WORKSPACE} ${BUILD_NUMBER} ${NICENESS}
+    ${TMPFILE} "${PKG}" ${DEBUG} ${WORKSPACE} ${BUILD_NUMBER:-0} ${NICENESS}
 
 set +e
 
