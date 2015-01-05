@@ -45,6 +45,10 @@ popd &>/dev/null
 
 [[ ${DEBUG} -eq 0 ]] && sudo rsync -aHx --exclude="*~" --force --delete --delete-excluded /srv/jenkins/amd64_base/amd64/* "${CHROOT}" || echo "rsync failed"
 
+if [[ -z ${WORKSPACE} ]]; then
+    WORKSPACE=/home/jenkins/workspace/$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query ${GERRIT_CHANGE_NUMBER} | awk '$1~/project:/{print $NF}')
+fi
+
 if [[ -n ${GERRIT_CHANGE_NUMBER} ]]; then
     PKG=$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query --files --current-patch-set change:${GERRIT_CHANGE_NUMBER} | awk -F/ '$1~/project:/{repo=$0};$1~/file:\ packages/{print $2"/"$3"::"repo}' | sed -e 's/::  project: \(.*\)$/::\1/' | sort -u | xargs)
     if [[ -z ${PKG} ]]; then
