@@ -1,0 +1,29 @@
+source /srv/tomcat/bin/data
+
+gerrit_start() {
+    /var/cache/tomcat/gerrit/bin/gerrit.sh start
+}
+
+gerrit_stop() {
+    /var/cache/tomcat/gerrit/bin/gerrit.sh stop
+}
+
+GERRIT_SITE_PATH="/var/cache/tomcat/gerrit"
+
+BACKUP_PATH="/mnt/backup/gerrit"
+DUMP_FILE="${BACKUP_PATH}"/mysql/review.sql
+
+gerrit_stop
+
+mysqldump -u "${MYSQL_DUMP_USER}" -p"${MYSQL_DUMP_PASS}" \
+    --databases review --flush-logs \
+    --flush-privileges \
+    --compress \
+    --lock-tables \
+    --dump-date \
+    --result-file="${DUMP_FILE}"
+
+/usr/bin/rsync -aHx --delete "${GERRIT_SITE_PATH}" "${BACKUP_PATH}"/site/
+
+gerrit_start
+
