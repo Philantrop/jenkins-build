@@ -13,7 +13,7 @@ GERRIT_SITE_PATH="/var/cache/tomcat/gerrit"
 BACKUP_PATH="/mnt/backup/gerrit"
 DUMP_FILE="${BACKUP_PATH}"/mysql/review.sql
 
-gerrit_stop
+#gerrit_stop
 
 mysqldump -u "${MYSQL_DUMP_USER}" -p"${MYSQL_DUMP_PASS}" \
     --databases review --flush-logs \
@@ -25,5 +25,5 @@ mysqldump -u "${MYSQL_DUMP_USER}" -p"${MYSQL_DUMP_PASS}" \
 
 /usr/bin/rsync -aHx --delete "${GERRIT_SITE_PATH}" "${BACKUP_PATH}"/site/
 
-gerrit_start
+#gerrit_start
 
