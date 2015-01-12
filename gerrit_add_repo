@@ -37,7 +37,7 @@ REPO_URI=$1
 REPO_NAME=$2
 
 if [[ -z ${REPO_URI} || -z ${REPO_NAME} ]]; then
-   echo "$0 <REPO_URI> <REPO_NAME> [REPO_STATE (ACTIVE)] [REPO_OWNER (empty; e. g. "Peter \"Piper\" Pan")] [REPO_OWNER_EMAIL (empty)]"
+   echo "$0 <REPO_URI> <REPO_NAME> <REPO_STATE (should be ACTIVE)> <REPO_OWNER (e. g. "Peter Pan")> <REPO_OWNER_EMAIL (IMPORTANT)>"
    exit 1
 fi
 
@@ -156,12 +156,11 @@ EOF
 
 elif [[ -n ${REPO_OWNER} ]]; then
 
-# WK: This is wrong. We use single-users now   
-   ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit create-group \
-       --description "'For ownership of ${REPO_NAME}'" \
-       --member "${REPO_OWNER_EMAIL}" "'${REPO_OWNER}'"
-# WK: This is wrong. We use single-users now   
-
+# WK: This is wrong. We use single-users now
+#   ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit create-group \
+#       --description "'For ownership of ${REPO_NAME}'" \
+#       --member "${REPO_OWNER_EMAIL}" "'${REPO_OWNER}'"
+# WK: This is wrong. We use single-users now
 
    ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit create-group \
        --description "'Replication-only group for ${REPO_OWNER} repos on ${HOSTER}. Do not touch this, do not add anyone to it.'" \
@@ -187,41 +186,78 @@ elif [[ -n ${REPO_OWNER} ]]; then
    git checkout -b config --track origin/config
 
 
-# WK: This is wrong. We use single-users now   
+# Examples:
+
+# file groups:
+# UUID                                          Group Name
+#
+# 473749837df7f9b98798979879811d5db5c9ea3c        Exherbo-github-foo-replication
+# user:Philantrop                                 user/Wulf C. Krueger (Philantrop)
+
+# We need the UUID but with a slash as the delimiter. So, to play by the Gerrit
+# rules, we do this:
+
+# EMAIL="philantrop@exherbo.org"; echo "select distinct b.external_id from accounts as a left join account_external_ids as b on a.account_id=b.account_id where a.preferred_email='"${EMAIL}"' and b.external_id like 'username:%' order by a.account_id;" | ssh -x -p 29418 Philantrop@galileo.mailstation.de gerrit gsql --format=json_single | sed -e 's;.*\(user\)name:\(.*\)"}.*;\1/\2;'
+# -> user/Philantrop
+
+
+# WK: This is new. Test it!
+REPO_OWNER_USERNAME=$(
+echo "\
+    select distinct b.external_id \
+    from accounts as a \
+    left join account_external_ids as b \
+    on a.account_id=b.account_id \
+    where a.preferred_email='"${REPO_OWNER_EMAIL}"' and \
+    b.external_id like 'username:%' \
+    order by a.account_id;" \
+    | ssh -x -p ${PORT} ${SSH_USER}@${SERVER} gerrit gsql --format=json_single \
+    | sed -e 's;.*\(user\)name:\(.*\)"}.*;\1/\2;'
+)
+
 cat <<EOF > project.config
 [submit]
         action = rebase if necessary
 [access "refs/heads/*"]
-        owner = group ${REPO_OWNER}
+        owner = group ${REPO_OWNER_USERNAME}
         read = group Exherbo-${HOSTER}-${REPO_NAME}-replication
-        read = group ${REPO_OWNER}
-        abandon = group ${REPO_OWNER}
-        create = group ${REPO_OWNER}
-        forgeAuthor = group ${REPO_OWNER}
-        forgeCommitter = group ${REPO_OWNER}
-        forgeServerAsCommitter = group ${REPO_OWNER}
-        push = group ${REPO_OWNER}
-        pushMerge = group ${REPO_OWNER}
-        pushTag = group ${REPO_OWNER}
-        pushSignedTag = group ${REPO_OWNER}
-        label-Code-Review = -2..+2 group ${REPO_OWNER}
-        labelAs-Code-Review = -2..+2 group ${REPO_OWNER}
-        rebase = group ${REPO_OWNER}
-        removeReviewer = group ${REPO_OWNER}
-        submit = group ${REPO_OWNER}
-        viewDrafts = group ${REPO_OWNER}
-        editTopicName = group ${REPO_OWNER}
-        deleteDrafts = group ${REPO_OWNER}
-        publishDrafts = group ${REPO_OWNER}
+        read = group ${REPO_OWNER_USERNAME}
+        abandon = group ${REPO_OWNER_USERNAME}
+        create = group ${REPO_OWNER_USERNAME}
+        forgeAuthor = group ${REPO_OWNER_USERNAME}
+        forgeCommitter = group ${REPO_OWNER_USERNAME}
+        forgeServerAsCommitter = group ${REPO_OWNER_USERNAME}
+        push = group ${REPO_OWNER_USERNAME}
+        pushMerge = group ${REPO_OWNER_USERNAME}
+        pushTag = group ${REPO_OWNER_USERNAME}
+        pushSignedTag = group ${REPO_OWNER_USERNAME}
+        label-Code-Review = -2..+2 group ${REPO_OWNER_USERNAME}
+        labelAs-Code-Review = -2..+2 group ${REPO_OWNER_USERNAME}
+        rebase = group ${REPO_OWNER_USERNAME}
+        removeReviewer = group ${REPO_OWNER_USERNAME}
+        submit = group ${REPO_OWNER_USERNAME}
+        viewDrafts = group ${REPO_OWNER_USERNAME}
+        editTopicName = group ${REPO_OWNER_USERNAME}
+        deleteDrafts = group ${REPO_OWNER_USERNAME}
+        publishDrafts = group ${REPO_OWNER_USERNAME}
 EOF
-# WK: This is wrong. We use single-users now   
+# WK: This is new. Test it!
+
+
+#for groups:
+
+#echo "SELECT group_uuid, name FROM account_groups;" | ssh -x -p 29418 Philantrop@galileo.mailstation.de gerrit gsql
 
 
 
 # Old, since 2.9 half-broken method
 #   mysql -u ${MYSQL_USER} -p${MYSQL_PWD} ${MYSQL_DB} --skip-column-names -B -e "SELECT group_uuid, name FROM account_groups;" >>groups
-  
+
+# WK: This is wrong. We use single-users now
+
    ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-groups -v | awk '-F\t' '{printf ($2"\t"$1"\n")}' >>groups
+
+# WK: This is wrong. We use single-users now
 
    git add project.config groups
    git cm -m "Initial project config"
@@ -255,7 +291,7 @@ EOF
 
    sudo cat /tmp/replication.config >>replication.config
    sudo emacs -nw replication.config
-   
+
    # CAREFUL! The hostname in the next line MUST be "localhost"!
    ssh -p ${PORT} ${SSH_USER}@localhost gerrit plugin reload replication
 
