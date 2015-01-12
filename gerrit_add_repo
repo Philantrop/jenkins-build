@@ -126,10 +126,13 @@ EOF
    sudo chmod -R a+rwx "${REPO_NAME}.git"
 
 elif [[ -n ${REPO_OWNER} ]]; then
-   
+
+# WK: This is wrong. We use single-users now   
    ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit create-group \
        --description "'For ownership of ${REPO_NAME}'" \
        --member "${REPO_OWNER_EMAIL}" "'${REPO_OWNER}'"
+# WK: This is wrong. We use single-users now   
+
 
    ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit create-group \
        --description "'Replication-only group for ${REPO_OWNER} repos on ${HOSTER}. Do not touch this, do not add anyone to it.'" \
@@ -154,6 +157,8 @@ elif [[ -n ${REPO_OWNER} ]]; then
    git fetch origin +refs/meta/*:refs/remotes/origin/*
    git checkout -b config --track origin/config
 
+
+# WK: This is wrong. We use single-users now   
 cat <<EOF > project.config
 [submit]
         action = rebase if necessary
@@ -180,6 +185,9 @@ cat <<EOF > project.config
         deleteDrafts = group ${REPO_OWNER}
         publishDrafts = group ${REPO_OWNER}
 EOF
+# WK: This is wrong. We use single-users now   
+
+
 
 # Old, since 2.9 half-broken method
 #   mysql -u ${MYSQL_USER} -p${MYSQL_PWD} ${MYSQL_DB} --skip-column-names -B -e "SELECT group_uuid, name FROM account_groups;" >>groups
