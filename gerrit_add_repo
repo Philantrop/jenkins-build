@@ -139,7 +139,10 @@ cat <<EOF > project.config
         read = group Exherbo-${REPLICATION_GROUP}-replication
 EOF
 
-   mysql -u ${MYSQL_USER} -p${MYSQL_PWD} ${MYSQL_DB} --skip-column-names -B -e "SELECT group_uuid, name FROM account_groups WHERE name in (\"Exherbo-${REPLICATION_GROUP}-replication\")" >>groups
+    ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-groups -v | awk '-F\t' '{printf ($2"\t"$1"\n")}' >>groups
+
+# Old, since 2.9 half-broken method:
+#    mysql -u ${MYSQL_USER} -p${MYSQL_PWD} ${MYSQL_DB} --skip-column-names -B -e "SELECT group_uuid, name FROM account_groups WHERE name in (\"Exherbo-${REPLICATION_GROUP}-replication\")" >>groups
 
    git add project.config groups
    git cm -m "Initial project config"
@@ -156,15 +159,16 @@ EOF
 
 elif [[ -n ${REPO_OWNER} ]]; then
 
-# WK: This is wrong. We use single-users now
+# WK: This is old. We use single-users now
 #   ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit create-group \
 #       --description "'For ownership of ${REPO_NAME}'" \
 #       --member "${REPO_OWNER_EMAIL}" "'${REPO_OWNER}'"
-# WK: This is wrong. We use single-users now
+# WK: This is old. We use single-users now
 
-   ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit create-group \
-       --description "'Replication-only group for ${REPO_OWNER} repos on ${HOSTER}. Do not touch this, do not add anyone to it.'" \
-       --member "philantrop@exherbo.org" "'Exherbo-${HOSTER}-${REPO_NAME}-replication'"
+# This is still necessary because each replication group has its own replication URL.
+    ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit create-group \
+        --description "'Replication-only group for ${REPO_OWNER} repos on ${HOSTER}. Do not touch this, do not add anyone to it.'" \
+        --member "philantrop@exherbo.org" "'Exherbo-${HOSTER}-${REPO_NAME}-replication'"
 
    pushd /tmp
 
@@ -185,8 +189,7 @@ elif [[ -n ${REPO_OWNER} ]]; then
    git fetch origin +refs/meta/*:refs/remotes/origin/*
    git checkout -b config --track origin/config
 
-
-# Examples:
+# Example:
 
 # file groups:
 # UUID                                          Group Name
@@ -241,40 +244,50 @@ cat <<EOF > project.config
         deleteDrafts = group ${REPO_OWNER_USERNAME}
         publishDrafts = group ${REPO_OWNER_USERNAME}
 EOF
-# WK: This is new. Test it!
 
-
-#for groups:
-
+#for REAL groups:
 #echo "SELECT group_uuid, name FROM account_groups;" | ssh -x -p 29418 Philantrop@galileo.mailstation.de gerrit gsql
 
+# WK: This is old. We use single-users now
+#   ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-groups -v | awk '-F\t' '{printf ($2"\t"$1"\n")}' >>groups
+# WK: This is old. We use single-users now
 
 
-# Old, since 2.9 half-broken method
-#   mysql -u ${MYSQL_USER} -p${MYSQL_PWD} ${MYSQL_DB} --skip-column-names -B -e "SELECT group_uuid, name FROM account_groups;" >>groups
+# This is what we will create as the "groups" file:
+#
+# UUID                                          Group Name
+#
+# user:Philantrop                               user/Philantrop
 
-# WK: This is wrong. We use single-users now
+# The "Group Name" field in reality looks like this: user/Wulf C. Krueger (Philantrop)
+# user/${REPO_OWNER_USERNAME} works, though, and so we'll use that as we have no
+# reliable method to fetch the real name.
 
-   ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-groups -v | awk '-F\t' '{printf ($2"\t"$1"\n")}' >>groups
+# First, let's add all real group. Just to be sure.
+    ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-groups -v | awk '-F\t' '{printf ($2"\t"$1"\n")}' >>groups
 
-# WK: This is wrong. We use single-users now
+    cat <<EOF >> groups
+${REPO_OWNER_USERNAME/\//:}                               ${REPO_OWNER_USERNAME}
+EOF
 
-   git add project.config groups
-   git cm -m "Initial project config"
-   git push origin HEAD:refs/meta/config
+# WK: This is new. Test it!
 
-   cd /tmp
+    git add project.config groups
+    git cm -m "Initial project config"
+    git push origin HEAD:refs/meta/config
 
-   rm -rf "${REPO_NAME}"
+    cd /tmp
 
-   popd
+    rm -rf "${REPO_NAME}"
 
-   sudo chown -R ${USER}:${GROUP} "${REPO_NAME}.git"
-   sudo chmod -R a+rwx "${REPO_NAME}.git"
+    popd
 
-   pushd /var/cache/tomcat/gerrit/etc
+    sudo chown -R ${USER}:${GROUP} "${REPO_NAME}.git"
+    sudo chmod -R a+rwx "${REPO_NAME}.git"
 
-   cat <<EOF > /tmp/replication.config
+    pushd /var/cache/tomcat/gerrit/etc
+
+    cat <<EOF > /tmp/replication.config
 # -----FIX THE URL LINE BELOW AND DELETE THIS LINE ------------
 [remote "Exherbo-${HOSTER}-${REPO_NAME}"]
   url = git@${HOSTER}.com:${REPO_NAME}/\${name}-exheres.git
@@ -289,14 +302,14 @@ EOF
 
 EOF
 
-   sudo cat /tmp/replication.config >>replication.config
-   sudo emacs -nw replication.config
+    sudo cat /tmp/replication.config >>replication.config
+    sudo emacs -nw replication.config
 
-   # CAREFUL! The hostname in the next line MUST be "localhost"!
-   ssh -p ${PORT} ${SSH_USER}@localhost gerrit plugin reload replication
+    # CAREFUL! The hostname in the next line MUST be "localhost"!
+    # (Not really anymore but still...)
+    ssh -p ${PORT} ${SSH_USER}@localhost gerrit plugin reload replication
 
-   rm /tmp/replication.config
-
+    rm /tmp/replication.config
 fi
 
 
