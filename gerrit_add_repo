@@ -1,3 +1,32 @@
+# Don't use this script before it's adapted to Gerrit 2.10
+
+echo "This script doesn't work properly with our new Gerrit yet."
+echo "This script will now commit suicide!"
+
+echo "
+            ._
+            \ \_____________________________^__
+           .'                                 {
+           /              {    ___{~~~~~~~~~~~~
+            \    / ~      {    ___{
+            |   /         {_______{
+           /         /|~~~~\\
+          |         /\ \    ||
+         /         |  \ }   //    
+        /          |_____ //   
+        { xxxxxxx /~~~~~~~   
+        {xxxxxxxxx\     
+        {xxxxxxxxx/
+        {xxxxxxxxx\
+        {xxxxxxxxx/
+         \xxxxxxx/
+           ~~~~~~
+"
+
+exit 0
+
+
+
 source /srv/tomcat/bin/data
 
 #USER=""
