@@ -23,7 +23,7 @@ mysqldump -u "${MYSQL_DUMP_USER}" -p"${MYSQL_DUMP_PASS}" \
     --dump-date \
     --result-file="${DUMP_FILE}"
 
-/usr/bin/rsync -aHx --delete "${GERRIT_SITE_PATH}" "${BACKUP_PATH}"/site/
+/usr/bin/rsync -rltD -Hx --delete "${GERRIT_SITE_PATH}" "${BACKUP_PATH}"/site/
 
 #gerrit_start
 
