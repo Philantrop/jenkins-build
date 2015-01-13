@@ -37,72 +37,69 @@ REPO_URI=$1
 REPO_NAME=$2
 
 if [[ -z ${REPO_URI} || -z ${REPO_NAME} ]]; then
-   echo "$0 <REPO_URI> <REPO_NAME> <REPO_STATE (should be ACTIVE)> <REPO_OWNER (e. g. "Peter Pan")> <REPO_OWNER_EMAIL (IMPORTANT)>"
-   exit 1
+    echo "$0 <REPO_URI> <REPO_NAME> <REPO_STATE (should be ACTIVE)> <REPO_OWNER (e. g. "Peter Pan")> <REPO_OWNER_EMAIL (IMPORTANT)>"
+    exit 1
 fi
 
 case "${REPO_URI}" in
-     *github*)
+    *github*)
         HOSTER=github
-     ;;
-     *gitorious*)
+    ;;
+    *gitorious*)
         HOSTER=gitorious
-     ;;
-     *git.exherbo.org*)
-	HOSTER=Exherbo
-     ;;
-     *thwitt.de*)
-	HOSTER=thwitt
-     ;;
-     *shadowice.org*)
-	HOSTER=thwitt
-     ;;
-     *)
+    ;;
+    *git.exherbo.org*)
+        HOSTER=Exherbo
+    ;;
+    *thwitt.de*)
+        HOSTER=thwitt
+    ;;
+    *shadowice.org*)
+        HOSTER=thwitt
+    ;;
+    *)
         echo "Unknown hoster"
-	exit 3
-     ;;
+        exit 3
+    ;;
 esac
 
 case "${REPO_URI}" in
-     *git.exherbo.org/dev/*)
+    *git.exherbo.org/dev/*)
         REPLICATION_GROUP=dev
-     ;;
-     *git.exherbo.org/*)
+    ;;
+    *git.exherbo.org/*)
         REPLICATION_GROUP=official
-     ;;
-     *github.com:Exherbo*)
+    ;;
+    *github.com:Exherbo*)
         REPLICATION_GROUP=github
-     ;;
-     *)
+    ;;
+    *)
         echo "Will generate a new replication group"
-     ;;
+    ;;
 esac
-
-
 
 # ACTIVE: project is regular and is the default value.
 # READ_ONLY: users can see the project if read permission is granted, but all modification operations are disabled.
 # HIDDEN: the project is not visible for those who are not owners
 
 if [[ -z $3 ]]; then
-   REPO_STATE="ACTIVE"
+    REPO_STATE="ACTIVE"
 else
-   REPO_STATE=$3
+    REPO_STATE=$3
 fi
 
 if [[ -n $4 && -n $5 ]]; then
-   REPO_OWNER=$4
-   REPO_OWNER_EMAIL=$5
+    REPO_OWNER=$4
+    REPO_OWNER_EMAIL=$5
 fi
-
 
 cd "${REPOPATH}"
 
 git clone --bare "${REPO_URI}" "${REPO_NAME}".git
 
 if [[ ! -d ${REPOPATH}/${REPO_NAME}.git ]]; then
-   echo "cloning failed"
-   exit 2
+    echo "cloning failed"
+    exit 2
 fi
 
 sudo chown -R ${USER}:${GROUP} "${REPO_NAME}.git"
@@ -113,24 +110,24 @@ ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit set-project --submit-type REBASE_IF_
 ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit flush-caches --cache project_list
 
 if [[ -z ${REPO_OWNER} ]]; then
-   pushd /tmp
+    pushd /tmp
 
-   if [[ ! $(ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-projects | grep "^${REPO_NAME}$") ]]; then
-      echo "repo not on Gerrit yet"
-      sleep 1
-      ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit flush-caches --cache project_list
-      sleep 1
-   fi   
+    if [[ ! $(ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-projects | grep "^${REPO_NAME}$") ]]; then
+        echo "repo not on Gerrit yet"
+        sleep 1
+        ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit flush-caches --cache project_list
+        sleep 1
+    fi
 
-   if [[ ! $(ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-projects | grep "^${REPO_NAME}$") ]]; then
-      echo "I FAILED"
-      exit 10
-   fi
+    if [[ ! $(ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-projects | grep "^${REPO_NAME}$") ]]; then
+        echo "I FAILED"
+        exit 10
+    fi
 
-   git clone "${GERRIT_SERVER}"/"${REPO_NAME}" "${REPO_NAME}"
-   cd "${REPO_NAME}"
-   git fetch origin +refs/meta/*:refs/remotes/origin/*
-   git checkout -b config --track origin/config
+    git clone "${GERRIT_SERVER}"/"${REPO_NAME}" "${REPO_NAME}"
+    cd "${REPO_NAME}"
+    git fetch origin +refs/meta/*:refs/remotes/origin/*
+    git checkout -b config --track origin/config
 
 cat <<EOF > project.config
 [submit]
@@ -144,18 +141,18 @@ EOF
 # Old, since 2.9 half-broken method:
 #    mysql -u ${MYSQL_USER} -p${MYSQL_PWD} ${MYSQL_DB} --skip-column-names -B -e "SELECT group_uuid, name FROM account_groups WHERE name in (\"Exherbo-${REPLICATION_GROUP}-replication\")" >>groups
 
-   git add project.config groups
-   git cm -m "Initial project config"
-   git push origin HEAD:refs/meta/config
+    git add project.config groups
+    git cm -m "Initial project config"
+    git push origin HEAD:refs/meta/config
 
-   cd /tmp
+    cd /tmp
 
-   rm -rf "${REPO_NAME}"
+    rm -rf "${REPO_NAME}"
 
-   popd
+    popd
 
-   sudo chown -R ${USER}:${GROUP} "${REPO_NAME}.git"
-   sudo chmod -R a+rwx "${REPO_NAME}.git"
+    sudo chown -R ${USER}:${GROUP} "${REPO_NAME}.git"
+    sudo chmod -R a+rwx "${REPO_NAME}.git"
 
 elif [[ -n ${REPO_OWNER} ]]; then
 
@@ -172,22 +169,22 @@ elif [[ -n ${REPO_OWNER} ]]; then
 
    pushd /tmp
 
-   if [[ ! $(ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-projects | grep "^${REPO_NAME}$") ]]; then
-      echo "repo not on Gerrit yet"
-      sleep 1
-      ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit flush-caches --cache project_list
-      sleep 1
-   fi
+    if [[ ! $(ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-projects | grep "^${REPO_NAME}$") ]]; then
+        echo "repo not on Gerrit yet"
+        sleep 1
+        ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit flush-caches --cache project_list
+        sleep 1
+    fi
 
-   if [[ ! $(ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-projects | grep "^${REPO_NAME}$") ]]; then
-      echo "I FAILED"
-      exit 10
-   fi
+    if [[ ! $(ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-projects | grep "^${REPO_NAME}$") ]]; then
+        echo "I FAILED"
+        exit 10
+    fi
 
-   git clone "${GERRIT_SERVER}"/"${REPO_NAME}" "${REPO_NAME}"
-   cd "${REPO_NAME}"
-   git fetch origin +refs/meta/*:refs/remotes/origin/*
-   git checkout -b config --track origin/config
+    git clone "${GERRIT_SERVER}"/"${REPO_NAME}" "${REPO_NAME}"
+    cd "${REPO_NAME}"
+    git fetch origin +refs/meta/*:refs/remotes/origin/*
+    git checkout -b config --track origin/config
 
 # Example:
 
