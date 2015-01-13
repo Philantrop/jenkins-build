@@ -1,31 +1,9 @@
-# Don't use this script before it's adapted to Gerrit 2.10
-
-echo "This script doesn't work properly with our new Gerrit yet."
-echo "This script will now commit suicide!"
-
 echo "
-            ._
-            \ \_____________________________^__
-           .'                                 {
-           /              {    ___{~~~~~~~~~~~~
-            \    / ~      {    ___{
-            |   /         {_______{
-           /         /|~~~~\\
-          |         /\ \    ||
-         /         |  \ }   //    
-        /          |_____ //   
-        { xxxxxxx /~~~~~~~   
-        {xxxxxxxxx\     
-        {xxxxxxxxx/
-        {xxxxxxxxx\
-        {xxxxxxxxx/
-         \xxxxxxx/
-           ~~~~~~
+This script might not yet work properly with our new Gerrit.
+
+Are you sure you want to continue? (CTRL+C if you're unsure)
 "
-
-exit 0
-
-
+read
 
 source /srv/tomcat/bin/data
 
