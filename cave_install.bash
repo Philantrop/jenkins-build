@@ -4,8 +4,9 @@ TMPFILE=$1
 PKG=$2
 DEBUG=$3
 WORKSPACE=$4
-BUILDNO=$5
-NICENESS=$6
+REPO=$5
+BUILDNO=$6
+NICENESS=$7
 
 hostname localhost
 
@@ -19,10 +20,13 @@ stty columns 80 rows 40
 echo > ${TMPFILE}
 [[ ${DEBUG} -eq 1 ]] && ls -l ${TMPFILE}
 
-WORKSPACE=${WORKSPACE//@*}
+PROJ=$(basename ${WORKSPACE//@*})
+if [[ ${WORKSPACE} == *@* ]]; then
+    export CAVE_REPO_SUFFIX_${PROJ//-/_}=${WORKSPACE/#*@/@}
+fi
 
 if [[ ${PKG} == everything ]]; then
-    PKG="$(cave print-ids --matching "*/*::$(basename ${WORKSPACE})" --format '%c/%p%:%s::%r\n')"
+    PKG="$(cave print-ids --matching "*/*::${REPO}" --format '%c/%p%:%s::%r\n')"
 fi
 
 echo "**************************************************************"
@@ -55,8 +59,8 @@ rc=$?
 
 if [[ ${rc} -gt 0 ]]; then
     PKG=${PKG/*\/}
-    find /var/tmp/paludis/build/*${PKG/::*}* -name "config.log" -exec cp {} /var/db/paludis/gerrit/$(basename ${WORKSPACE})/${BUILDNO}_config.log \;
-    find /var/log/paludis -name "*${PKG/::*}*.out" -exec cp {} /var/db/paludis/gerrit/$(basename ${WORKSPACE})/${BUILDNO}_build.log \;
+    find /var/tmp/paludis/build/*${PKG/::*}* -name "config.log" -exec cp {} /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_config.log \;
+    find /var/log/paludis -name "*${PKG/::*}*.out" -exec cp {} /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_build.log \;
 
 #    if [[ -n ${PKG} ]]; then
 #	find /var/db/paludis/repositories/pbin -iname "*${PKG/::*}*" -delete
@@ -69,7 +73,7 @@ else
     echo "**************************************************************"
 fi
 
-cp cave-resolve.txt /var/db/paludis/gerrit/$(basename ${WORKSPACE})/${BUILDNO}_cave-resolve.txt
-[[ -f dependencies.txt ]] && cp dependencies.txt /var/db/paludis/gerrit/$(basename ${WORKSPACE})/${BUILDNO}_dependencies.txt
+cp cave-resolve.txt /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
+[[ -f dependencies.txt ]] && cp dependencies.txt /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_dependencies.txt
 
 exit ${rc}
