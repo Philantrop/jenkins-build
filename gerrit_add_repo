@@ -241,9 +241,7 @@ EOF
 # First, let's add all real group. Just to be sure.
     ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-groups -v | awk '-F\t' '{printf ($2"\t"$1"\n")}' >>groups
 
-    cat <<EOF >> groups
-${REPO_OWNER_USERNAME/\//:}\t${REPO_OWNER_USERNAME}
-EOF
+    echo "${REPO_OWNER_USERNAME/\//:}\t${REPO_OWNER_USERNAME}" >> groups
 
 # WK: This is new. Test it!
 
