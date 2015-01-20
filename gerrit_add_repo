@@ -303,6 +303,10 @@ source /etc/profile
 
 ln -sf /etc/paludis/repositories/philantrop.bash /etc/paludis/repositories/${REPO_NAME}.bash
 "
+
+# systemd-nspawn >= 217 doesn't like it if the target directory of a bind mount already exists
+sudo rm -rf /srv/jenkins/amd64_base/amd64/var/db/paludis/repositories/pbin /srv/jenkins/amd64_base/amd64/var/db/paludis/gerrit
+
 # keep -E :jenkins-pbins on / updated
 sudo ln -sf philantrop.bash /etc/paludis-jenkins-pbins/repositories/${REPO_NAME}.bash
 
