@@ -14,8 +14,8 @@ PAGER=""
 NICENESS=0
 
 # Nuke potentially disrupting directories
-rmdir /srv/jenkins/amd64_base/amd64/var/db/paludis/gerrit
-rmdir /srv/jenkins/amd64_base/amd64/var/db/paludis/repositories/pbin
+[[ -d /srv/jenkins/amd64_base/amd64/var/db/paludis/gerrit ]] && rmdir /srv/jenkins/amd64_base/amd64/var/db/paludis/gerrit
+[[ -d /srv/jenkins/amd64_base/amd64/var/db/paludis/repositories/pbin ]] && rmdir /srv/jenkins/amd64_base/amd64/var/db/paludis/repositories/pbin
 
 let CHROOT_NUM=1
 let CHROOT_MAX=20
