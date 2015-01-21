@@ -9,7 +9,7 @@ source /srv/tomcat/bin/data
 #SSH_USER=""
 DEBUG=0
 TMPFILE=$(mktemp -uq)
-JENKINS_HOME="http://${USER}:${PASS}@${URI}" 
+JENKINS_HOME="http://${USER}:${PASS}@${URI}"
 PAGER=""
 NICENESS=0
 
@@ -36,7 +36,7 @@ done
 unset PKG
 
 pushd /home/jenkins/workspace &>/dev/null
-for repo in $(ls); do 
+for repo in $(ls); do
     pushd "${x}" &>/dev/null
     git pull &>/dev/null
     popd &>/dev/null
@@ -52,41 +52,41 @@ fi
 if [[ -n ${GERRIT_CHANGE_NUMBER} ]]; then
     PKG=$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query --files --current-patch-set change:${GERRIT_CHANGE_NUMBER} | awk -F/ '$1~/project:/{repo=$0};$1~/file:\ packages/{print $2"/"$3"::"repo}' | sed -e 's/::  project: \(.*\)$/::\1/' | sort -u | xargs)
     if [[ -z ${PKG} ]]; then
-	EXLIB=$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query --files --current-patch-set change:${GERRIT_CHANGE_NUMBER} | awk -F/ '$1~/file: exlibs/{print $2}' | sort -u | xargs)
-	if [[ -n ${EXLIB} ]]; then
-	    echo "Change ${GERRIT_CHANGE_NUMBER} is for ${EXLIB}. Not sure what to do. Exiting."
-	    exit 0
-	else
-	    echo "No package to build. No exlib recognised. Don't know what to do. Exiting."
-	    exit 0
-	fi
+        EXLIB=$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query --files --current-patch-set change:${GERRIT_CHANGE_NUMBER} | awk -F/ '$1~/file: exlibs/{print $2}' | sort -u | xargs)
+        if [[ -n ${EXLIB} ]]; then
+            echo "Change ${GERRIT_CHANGE_NUMBER} is for ${EXLIB}. Not sure what to do. Exiting."
+            exit 0
+        else
+            echo "No package to build. No exlib recognised. Don't know what to do. Exiting."
+            exit 0
+        fi
     fi
 fi
 
-if [[ -z ${GERRIT_CHANGE_NUMBER} ]]; then 
+if [[ -z ${GERRIT_CHANGE_NUMBER} ]]; then
     if [[ -n $2 ]]; then
-	GERRIT_CHANGE_NUMBER=$2
+        GERRIT_CHANGE_NUMBER=$2
     elif [[ -n ${Package_to_build} ]]; then
-	if [[ ${Package_to_build} == */* ]]; then
-	    PKG=${Package_to_build}
-	elif [[ ${Package_to_build} == "everything" ]]; then
-	    PKG="everything"
-	fi
-    else
-	pushd "${WORKSPACE}"
-	PKG=$(git show --pretty=format:"" --name-only --no-color HEAD | grep -v "^$" | awk -F/ '$1~/packages/{print $2"/"$3}' | sort -u | xargs)
-	if [[ -n ${PKG} ]]; then PKG+="::$(basename ${WORKSPACE//@*})"; fi
-	if [[ -z ${PKG} ]]; then
-	    EXLIB=$(git show --pretty=format:"" --name-only --no-color HEAD | grep -v "^$" | awk -F/ '$1~/exlibs/{print $2}' | sort -u | xargs)
-            if [[ -n ${EXLIB} ]]; then
-		echo "git HEAD is for ${EXLIB}. Not sure what to do. Exiting."
-		exit 0
-            else
-		echo "No package to build. No exlib recognised. Don't know what to do. Exiting."
-		exit 0
-	    fi
+        if [[ ${Package_to_build} == */* ]]; then
+            PKG=${Package_to_build}
+        elif [[ ${Package_to_build} == "everything" ]]; then
+            PKG="everything"
         fi
-	popd
+    else
+        pushd "${WORKSPACE}"
+        PKG=$(git show --pretty=format:"" --name-only --no-color HEAD | grep -v "^$" | awk -F/ '$1~/packages/{print $2"/"$3}' | sort -u | xargs)
+        if [[ -n ${PKG} ]]; then PKG+="::$(basename ${WORKSPACE//@*})"; fi
+        if [[ -z ${PKG} ]]; then
+            EXLIB=$(git show --pretty=format:"" --name-only --no-color HEAD | grep -v "^$" | awk -F/ '$1~/exlibs/{print $2}' | sort -u | xargs)
+            if [[ -n ${EXLIB} ]]; then
+                echo "git HEAD is for ${EXLIB}. Not sure what to do. Exiting."
+                exit 0
+            else
+                echo "No package to build. No exlib recognised. Don't know what to do. Exiting."
+                exit 0
+            fi
+        fi
+        popd
     fi
 fi
 
@@ -103,6 +103,7 @@ for P2R in "${PROJECT_TO_REPO[@]}"; do
     [[ ${WORKSPACE} == *${P2R%:*}* ]] && WORKSPACE=${WORKSPACE//${P2R%:*}/${P2R#*:}}
 done
 unset P2R
+
 [[ ${PKG} == *::ocaml-unofficial* ]] && NICENESS=10
 
 set -e
