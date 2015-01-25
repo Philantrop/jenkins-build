@@ -13,9 +13,10 @@ JENKINS_HOME="http://${USER}:${PASS}@${URI}"
 PAGER=""
 NICENESS=0
 
-# Nuke potentially disrupting directories
-[[ -d /srv/jenkins/amd64_base/amd64/var/db/paludis/gerrit ]] && sudo rmdir /srv/jenkins/amd64_base/amd64/var/db/paludis/gerrit
-[[ -d /srv/jenkins/amd64_base/amd64/var/db/paludis/repositories/pbin ]] && sudo rmdir /srv/jenkins/amd64_base/amd64/var/db/paludis/repositories/pbin
+# Nuke potentially disrupting directories (only required for systemd[~217]; systemd[~218] breaks Jenkins)
+# galileo runs 216 for now.
+#[[ -d /srv/jenkins/amd64_base/amd64/var/db/paludis/gerrit ]] && sudo rmdir /srv/jenkins/amd64_base/amd64/var/db/paludis/gerrit
+#[[ -d /srv/jenkins/amd64_base/amd64/var/db/paludis/repositories/pbin ]] && sudo rmdir /srv/jenkins/amd64_base/amd64/var/db/paludis/repositories/pbin
 
 let CHROOT_NUM=1
 let CHROOT_MAX=20
