@@ -34,6 +34,9 @@ echo "Mounts:"
 mount
 echo "**************************************************************"
 
+echo "cave show -c ${PKG} &> cave-show_dependencies.txt"
+cave show -c ${PKG} &> cave-show_dependencies.txt
+
 echo cave resolve ${PKG} --display-resolution-program "cave print-resolution-required-confirmations > ${TMPFILE}"
 nice -n${NICENESS} cave resolve ${PKG} --display-resolution-program "cave print-resolution-required-confirmations > ${TMPFILE}"
 
