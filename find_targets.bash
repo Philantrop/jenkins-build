@@ -82,7 +82,7 @@ for slot in "${!ids[@]}"; do
 done
 pkgs=( $(
     IFS=$'\n'
-    echo "${pkgs[*]}" | tail -n 5
+    echo "${pkgs[*]}" | sort -R | tail -n 5
 ) )
 echo "${pkgs[@]}"
 
