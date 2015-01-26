@@ -53,6 +53,8 @@ for repo in $(ls); do
 done
 popd &>/dev/null
 
+diff -q /srv/jenkins/amd64_base/amd64/usr/local/bin/cave_install.bash ${0%/*}/cave_install.bash || sudo cp -av ${0%/*}/cave_install.bash /srv/jenkins/amd64_base/amd64/usr/local/bin/cave_install.bash
+
 [[ ${DEBUG} -eq 0 ]] && sudo rsync -aHx --exclude="*~" --force --delete --delete-excluded /srv/jenkins/amd64_base/amd64/* "${CHROOT}" || echo "rsync failed"
 
 if [[ -z ${WORKSPACE} ]]; then
