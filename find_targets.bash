@@ -11,7 +11,11 @@ mycave() {
 
 workdir=${PWD##*/}
 suffix=
-[[ ${workdir} == *@* ]] && suffix=${workdir/#*@/@}
+if [[ ${workdir} == *@* ]]; then
+    suffix=${workdir/#*@/@}
+    workdir=${workdir%@*}
+fi
+
 [[ ! -e profiles/repo_name ]] && give_up No repo_name
 repo=$(<profiles/repo_name)
 [[ -z $repo ]] && give_up Empty repo_name
