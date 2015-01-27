@@ -70,17 +70,18 @@ done <<< "${formats}"
 pkgs=()
 for slot in "${!ids[@]}"; do
     # for each slot
-    for mask in none any; do
-        ordered=$(mycave print-ids --format '%u\n' --matching "${slot}" --with-mask ${mask})
-        [[ -n ${ordered} ]] && break
-    done
     match=
     idArray=( ${ids[${slot}]} )
-    orderedArray=( ${ordered} )
-    for ((i=${#idArray[@]}-1; i>=0; i--)); do
-        for o in "${orderedArray[@]}"; do
-            [[ ${o} == ${idArray[i]} ]] && match=${o} && break 2
-        done
+    for mask in none any; do
+	ordered=$(mycave print-ids --format '%u\n' --matching "${slot}" --with-mask ${mask})
+	if [[ -n ${ordered} ]]; then
+	    orderedArray=( ${ordered} )
+	    for ((i=${#idArray[@]}-1; i>=0; i--)); do
+		for o in "${orderedArray[@]}"; do
+	    	    [[ ${o} == ${idArray[i]} ]] && match=${o} && break 3
+		done
+    	    done
+	fi
     done
     pkgs+=( ${match} )
 done
