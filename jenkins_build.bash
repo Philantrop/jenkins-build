@@ -78,7 +78,7 @@ REPO=$(<profiles/repo_name)
 if [[ -n ${GERRIT_CHANGE_NUMBER} ]]; then
     CHANGEID=$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query ${GERRIT_CHANGE_NUMBER} | awk '$1~/^id:$/{print $NF}')
     GITCHANGEID=$(git show --pretty='%b' -s | awk '$1~/^Change-Id:/{print $NF}')
-    [[ ${CHANGEID} == ${GITCHANGEID} ]] && PKG=$(bash -x ${0%/*}/find_targets.bash 2> find_targets_build.log)
+    [[ ${CHANGEID} == ${GITCHANGEID} ]] && PKG=$(bash -x ${0%/*}/find_targets.bash 2> ${BUILD_NUMBER:-0}_find_targets_build.log)
     if [[ -z ${PKG} ]]; then
         PKG=$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query --files --current-patch-set change:${GERRIT_CHANGE_NUMBER} | awk -F/ '$1~/project:/{repo=$0};$1~/file:\ packages/{print $2"/"$3"::"repo}' | sed -e 's/::  project: \(.*\)$/::\1/' | sort -u | xargs)
         if [[ -z ${PKG} ]]; then
@@ -118,7 +118,7 @@ if [[ -z ${GERRIT_CHANGE_NUMBER} ]]; then
             PKG="everything"
         fi
     else
-        PKG=$(bash -x ${0%/*}/find_targets.bash 2> find_targets_build.log)
+        PKG=$(bash -x ${0%/*}/find_targets.bash 2> ${BUILD_NUMBER:-0}_find_targets_build.log)
         if [[ -z ${PKG} ]]; then
             PKG=$(git show --pretty=format:"" --name-only --no-color HEAD | grep -v "^$" | awk -F/ '$1~/packages/{print $2"/"$3}' | sort -u | xargs)
             if [[ -n ${PKG} ]]; then PKG+="::${REPO}"; fi

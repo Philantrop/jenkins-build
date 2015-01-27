@@ -35,7 +35,7 @@ mount
 echo "**************************************************************"
 
 echo "cave show -c ${PKG} &> cave-show_dependencies.txt"
-cave show -c ${PKG} &> cave-show_dependencies.txt
+cave show -c ${PKG} &> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-show_dependencies.txt
 
 echo cave resolve ${PKG} --display-resolution-program "cave print-resolution-required-confirmations > ${TMPFILE}"
 nice -n${NICENESS} cave resolve ${PKG} --display-resolution-program "cave print-resolution-required-confirmations > ${TMPFILE}"
@@ -56,7 +56,7 @@ fi
 echo "**************************************************************"
 echo "cave resolve command"
 echo cave resolve -zx --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS}
-echo cave resolve -zx --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS} &> cave-resolve.txt
+echo cave resolve -zx --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS} &> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
 [[ ${DEBUG} -eq 0 ]] && cave resolve -zx --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS}
 rc=$?
 
@@ -72,11 +72,8 @@ else
     echo "**************************************************************"
     echo "Dependencies I believe to have found (excluding system):"
     #mscan ${PKG/::*}
-    /usr/bin/mscan2.rb -i system ${PKG/::*} 2>&1 | tee dependencies.txt
+    /usr/bin/mscan2.rb -i system ${PKG/::*} 2>&1 | tee /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_dependencies.txt
     echo "**************************************************************"
 fi
-
-cp cave-resolve.txt /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
-[[ -f dependencies.txt ]] && cp dependencies.txt /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_dependencies.txt
 
 exit ${rc}
