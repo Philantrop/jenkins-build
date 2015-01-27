@@ -19,30 +19,30 @@ formats=""
 while read f; do
     # match exact exheres
     if [[ $f == *.exheres-0 ]]; then
-        matching="*/*::${repo}[.EXHERES=${PWD}/${f}]"
+	matching="*/*::${repo}[.EXHERES=${PWD}/${f}]"
     elif [[ $f == *.exlib ]]; then
-        exlib=${f##*/}
-        if [[ ${f} == exlibs/* ]]; then
-            # match per repo exlib
-            matching="*/*::${repo}[.INHERITED<${exlib%.exlib}]"
-        elif [[ ${f} == packages/*/exlibs/*.exlib ]]; then
-            # match per category exlib
-            cat=${f#packages/}
-            cat=${cat%%/*}
-            matching="${cat}/*::${repo}[.INHERITED<${exlib%.exlib}]"
-        elif [[ ${f} == packages/*/*/*.exlib ]]; then
-            # match per package exlib
-            pkg=${f#packages/}
-            pkg=${pkg%/*}
-            matching="${pkg}::${repo}[.INHERITED<${exlib%.exlib}]"
-        fi
+	exlib=${f##*/}
+	if [[ ${f} == exlibs/* ]]; then
+	    # match per repo exlib
+	    matching="*/*::${repo}[.INHERITED<${exlib%.exlib}]"
+	elif [[ ${f} == packages/*/exlibs/*.exlib ]]; then
+	    # match per category exlib
+	    cat=${f#packages/}
+	    cat=${cat%%/*}
+	    matching="${cat}/*::${repo}[.INHERITED<${exlib%.exlib}]"
+	elif [[ ${f} == packages/*/*/*.exlib ]]; then
+	    # match per package exlib
+	    pkg=${f#packages/}
+	    pkg=${pkg%/*}
+	    matching="${pkg}::${repo}[.INHERITED<${exlib%.exlib}]"
+	fi
     fi
 
     # prefer visible but fall back to masked if none are visible
     [[ -z ${matching} ]] && continue
     formats+="$(for mask in none any; do
-        pkgs=$(mycave print-ids --format '%W %u\n' --matching  "${matching}" --with-mask ${mask})
-        [[ -n ${pkgs} ]] && echo "${pkgs}
+	pkgs=$(mycave print-ids --format '%W %u\n' --matching  "${matching}" --with-mask ${mask})
+	[[ -n ${pkgs} ]] && echo "${pkgs}
 " && break
     done)
 "
@@ -58,8 +58,8 @@ formats=$(sort -u <<< "${formats}")
 declare -A ids
 while read format; do
     if [[ -n ${format} ]]; then
-        f=${format% *}
-        ids[${f}]+=" ${format#* } "
+	f=${format% *}
+	ids[${f}]+=" ${format#* } "
     fi
 done <<< "${formats}"
 
