@@ -43,7 +43,7 @@ nice -n${NICENESS} cave resolve ${PKG} --display-resolution-program "cave print-
 [[ ${DEBUG} -eq 1 ]] && ls -l ${TMPFILE}
 [[ ${DEBUG} -eq 1 ]] && ls -l /usr/local/bin/handle_confirmations
 
-ARGS=$(/usr/local/bin/handle_confirmations < ${TMPFILE})
+ARGS=$(bash -x /usr/local/bin/handle_confirmations < ${TMPFILE} 2> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_handle_confirmations_build.log)
 if [[ "${ARGS}" == *unknown\ confirmation:* ]]; then
     echo "***** I FAILED! ***********************************************"
     cat ${TMPFILE}
