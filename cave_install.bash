@@ -53,10 +53,15 @@ fi
 
 [[ ${DEBUG} -eq 1 ]] && echo ARGS: ${ARGS}
 
+echo cave resolve -z --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS} &> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
+echo >> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
+cave resolve -z --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS} &>> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
+echo >> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
+
 echo "**************************************************************"
 echo "cave resolve command"
 echo cave resolve -zx --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS}
-echo cave resolve -zx --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS} &> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
+echo cave resolve -zx --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS} &>> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
 [[ ${DEBUG} -eq 0 ]] && cave resolve -zx --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS}
 rc=$?
 
