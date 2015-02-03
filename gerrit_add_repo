@@ -140,11 +140,14 @@ elif [[ -n ${REPO_OWNER} ]]; then
 # WK: This is old. We use single-users now
 
 # This is still necessary because each replication group has its own replication URL.
-    ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit create-group \
-        --description "'Replication-only group for ${REPO_OWNER} repos on ${HOSTER}. Do not touch this, do not add anyone to it.'" \
-        --member "philantrop@exherbo.org" "'Exherbo-${HOSTER}-${REPO_NAME}-replication'"
 
-   pushd /tmp
+    if [[ ! $(ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-groups | grep "Exherbo-${HOSTER}-${REPO_NAME}-replication") ]]; then
+            ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit create-group \
+            --description "'Replication-only group for ${REPO_OWNER} repos on ${HOSTER}. Do not touch this, do not add anyone to it.'" \
+            --member "philantrop@exherbo.org" "'Exherbo-${HOSTER}-${REPO_NAME}-replication'"
+    fi
+
+    pushd /tmp
 
     if [[ ! $(ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-projects | grep "^${REPO_NAME}$") ]]; then
         echo "repo not on Gerrit yet"
