@@ -285,6 +285,7 @@ EOF
     ssh -p ${PORT} ${SSH_USER}@localhost gerrit plugin reload replication
 
     rm /tmp/replication.config
+    popd
 fi
 
 # Add Jenkins task
@@ -293,9 +294,8 @@ mkdir /tmp/jenkins
 pushd /tmp/jenkins
 wget https://${SERVER}/jenkins/jnlpJars/jenkins-cli.jar
 
-
 # Test if this is an exheres repository
-if [[ $(git ls-tree -r --name-only master profiles/repo_name) ]]; then
+if [[ $(git --git-dir="${REPOPATH}/${REPO_NAME}.git" ls-tree -r --name-only master profiles/repo_name) ]]; then
     # The "philantrop" in the next line refers to the repository, not my nick. :-)
     java -jar jenkins-cli.jar -i ~/.ssh/id_dsa -s https://${SERVER}/jenkins/ copy-job philantrop ${REPO_NAME}
 else
@@ -308,11 +308,10 @@ java -jar jenkins-cli.jar -i ~/.ssh/id_dsa -s https://${SERVER}/jenkins/ update-
 java -jar jenkins-cli.jar -s https://${SERVER}/jenkins/ build ${REPO_NAME}
 
 popd
-
 rm -rf /tmp/jenkins
 
 # Test if this is an exheres repository
-if [[ $(git ls-tree -r --name-only master profiles/repo_name) ]]; then
+if [[ $(git --git-dir="${REPOPATH}/${REPO_NAME}.git" ls-tree -r --name-only master profiles/repo_name) ]]; then
     sudo systemd-nspawn --bind=/srv/www/localhost/htdocs/pbin:/var/db/paludis/repositories/pbin --bind-ro=/home/jenkins/workspace:/var/db/paludis/gerrit -D /srv/jenkins/amd64_base/amd64 /bin/bash -c "
     chgrp tty /dev/tty
     source /etc/profile
@@ -327,3 +326,4 @@ if [[ $(git ls-tree -r --name-only master profiles/repo_name) ]]; then
     sudo ln -sf philantrop.bash /etc/paludis-jenkins-pbins/repositories/${REPO_NAME}.bash
 fi
 
+popd
