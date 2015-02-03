@@ -1,0 +1,85 @@
+Adding a 3rd party exheres repository to Gerrit & Jenkins
+
+Remember the requirements as documented here: https://galileo.mailstation.de/?p=277
+
+Real-life example for ::jedahan:
+
+- su - <my user>
+
+- Go to the hoster to get the SSH (!) push URI: git@github.com:jedahan/exheres.git
+
+- Get the repository name from the "profiles" directory: https://github.com/jedahan/exheres/blob/master/profiles/repo_name
+
+- Get the repository owner's real name: https://github.com/jedahan -> Jonathan Dahan
+(If he doesn't have it set there, ask him for it. He needs to use it for the copyright
+line anyway.)
+
+- Verify that an account exists in Gerrit (I'm using the email address here but you
+could use the account_id as well):
+
+EMAIL="jonathan@jedahan.com";
+echo "select account_id,registered_on,full_name,preferred_email from accounts where preferred_email=\"${EMAIL}\";" \
+| ssh -x -p 29418 <username>@galileo.mailstation.de gerrit gsql
+
+->
+"Welcome to Gerrit Code Review 2.10-rc1
+(MySQL 5.6.22-log)
+
+Type '\h' for help.  Type '\r' to clear the buffer.
+
+gerrit>  account_id | registered_on         | full_name | preferred_email
+ -----------+-----------------------+-----------+---------------------
+ 42         | 2015-01-20 21:02:36.0 | NULL      | jonathan@jedahan.com
+(1 row; 1 ms)
+"
+
+Ideally, full_name would be set but it's *not* required.
+
+- Take all the above information and use it for gerrit_add_repo:
+
+gerrit_add_repo <REPO_URI> <REPO_NAME> <REPO_STATE (should be ACTIVE)> <REPO_OWNER (e. g. Peter Pan)> <REPO_OWNER_EMAIL (IMPORTANT)>
+
+/usr/local/bin/gerrit_add_repo git@github.com:jedahan/exheres.git jedahan ACTIVE "Jonathan Dahan" jonathan@jedahan.com
+
+Once you run the script, a lot of git output will be displayed. If anything goes wrong at this stage, go to Gerrit, delete the repository there, delete it in Jenkins, too. (Use the respective GUI and make sure the repository below /srv/gerrit is gone, too.)
+
+Afterwards, simply start this process over.
+
+- If all went well, emacs opens so you can edit the new replication entry:
+
+
+# -----FIX THE URL LINE BELOW AND DELETE THIS LINE ------------
+[remote "Exherbo-github-jedahan"]
+  url = git@github.com:jedahan/${name}-exheres.git
+  push = refs/heads/*:refs/heads/*
+  timeout = 15
+  replicationDelay = 0
+  replicatePermissions = false
+  createMissingRepositories = false
+  threads = 4
+  authGroup = Exherbo-github-jedahan-replication
+# -----FIX THE URL LINE ABOVE AND DELETE THIS LINE ------------
+
+You ABSOLUTELY MUST use ${name} in the "url" line. So, the above default entry becomes:
+
+[remote "Exherbo-github-jedahan"]
+  url = git@github.com:${name}/exheres.git
+  push = refs/heads/*:refs/heads/*
+  timeout = 15
+  replicationDelay = 0
+  replicatePermissions = false
+  createMissingRepositories = false
+  threads = 4
+  authGroup = Exherbo-github-jedahan-replication
+
+- Check that the repository now exists in both Gerrit and Jenkins.
+
+- In Gerrit, go to the project's "Access" tab (https://galileo.mailstation.de/gerrit/#/admin/projects/jedahan,access) and verify that the replication group has "Read" access. Copy its name!
+
+- Finally, go to the "All-Projects" access list and under "refs/*" add the replication group under "Read" but make sure to use "DENY" (!).
+
+
+If you need to add an official repository, the process is identical but simply use this:
+
+gerrit_add_repo <REPO_URI> <REPO_NAME>
+
