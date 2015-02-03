@@ -1,9 +1,5 @@
 source /srv/tomcat/bin/data
 
-#USER=""
-#REPOPATH=""
-#GERRIT_SERVER=""
-
 REPO_URI=$1
 REPO_NAME=$2
 
@@ -133,11 +129,6 @@ EOF
 
 elif [[ -n ${REPO_OWNER} ]]; then
 
-# WK: This is old. We use single-users now
-#   ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit create-group \
-#       --description "'For ownership of ${REPO_NAME}'" \
-#       --member "${REPO_OWNER_EMAIL}" "'${REPO_OWNER}'"
-# WK: This is old. We use single-users now
 
 # This is still necessary because each replication group has its own replication URL.
 
@@ -181,7 +172,6 @@ elif [[ -n ${REPO_OWNER} ]]; then
 # -> user/Philantrop
 
 
-# WK: This is new. Test it!
 REPO_OWNER_USERNAME=$(
 echo "\
     select distinct b.external_id \
@@ -225,11 +215,6 @@ EOF
 #for REAL groups:
 #echo "SELECT group_uuid, name FROM account_groups;" | ssh -x -p 29418 Philantrop@galileo.mailstation.de gerrit gsql
 
-# WK: This is old. We use single-users now
-#   ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-groups -v | awk '-F\t' '{printf ($2"\t"$1"\n")}' >>groups
-# WK: This is old. We use single-users now
-
-
 # This is what we will create as the "groups" file:
 #
 # UUID                                          Group Name
@@ -240,12 +225,10 @@ EOF
 # user/${REPO_OWNER_USERNAME} works, though, and so we'll use that as we have no
 # reliable method to fetch the real name.
 
-# First, let's add all real group. Just to be sure.
+# First, let's add all real groups. Just to be sure.
     ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit ls-groups -v | awk '-F\t' '{printf ($2"\t"$1"\n")}' >>groups
 
     echo -e "${REPO_OWNER_USERNAME/\//:}\t${REPO_OWNER_USERNAME}" >> groups
-
-# WK: This is new. Test it!
 
     git add project.config groups
     git cm -m "Initial project config"
@@ -326,4 +309,3 @@ if [[ $(git --git-dir="${REPOPATH}/${REPO_NAME}.git" ls-tree -r --name-only mast
     sudo ln -sf philantrop.bash /etc/paludis-jenkins-pbins/repositories/${REPO_NAME}.bash
 fi
 
-popd
