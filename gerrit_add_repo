@@ -80,9 +80,11 @@ ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit flush-caches --cache project_list
 ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit set-project --submit-type REBASE_IF_NECESSARY --ps "${REPO_STATE}"  "${REPO_NAME}"
 ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit flush-caches --cache project_list
 
+pushd "${REPOPATH}/${REPO_NAME}.git"
 git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
 git config branch.master.remote origin
 git config branch.master.merge "refs/heads/master"
+popd
 
 if [[ -z ${REPO_OWNER} ]]; then
     pushd /tmp
