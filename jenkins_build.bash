@@ -18,31 +18,6 @@ give_up() {
     exit 1
 }
 
-# Nuke potentially disrupting directories (only required for systemd[~217]; systemd[~218] breaks Jenkins)
-# galileo runs 216 for now.
-#[[ -d /srv/jenkins/amd64_base/amd64/var/db/paludis/gerrit ]] && sudo rmdir /srv/jenkins/amd64_base/amd64/var/db/paludis/gerrit
-#[[ -d /srv/jenkins/amd64_base/amd64/var/db/paludis/repositories/pbin ]] && sudo rmdir /srv/jenkins/amd64_base/amd64/var/db/paludis/repositories/pbin
-
-let CHROOT_NUM=1
-let CHROOT_MAX=20
-
-if [[ -n $1 ]] && [[ -d $1 ]]; then
-    CHROOT="$1"
-else
-    CHROOT="/srv/jenkins/amd64_$(( ( RANDOM % 20 )  + 1 ))"
-fi
-
-sleep $(( ( RANDOM % 5 )  + 1 ))
-
-while [[ $(ps ax | grep -c "[s]ystemd-nspawn .* ${CHROOT}") -ge 1 ]] && [[ ${CHROOT_NUM} -le ${CHROOT_MAX} ]]; do
-    CHROOT="/srv/jenkins/amd64_${CHROOT_NUM}"
-    let CHROOT_NUM+=1
-done
-
-#if [[ $(ps ax | grep -c "[s]ystemd-nspawn .* ${CHROOT}") -ge 1 ]]; then
-#    CHROOT="/srv/jenkins/amd64_2"
-#fi
-
 unset PKG
 
 pushd /home/jenkins/workspace &>/dev/null
@@ -54,8 +29,6 @@ done
 popd &>/dev/null
 
 diff -q /srv/jenkins/amd64_base/amd64/usr/local/bin/cave_install.bash ${0%/*}/cave_install.bash || sudo cp -av ${0%/*}/cave_install.bash /srv/jenkins/amd64_base/amd64/usr/local/bin/cave_install.bash
-
-[[ ${DEBUG} -eq 0 ]] && sudo rsync -aHx --exclude="*~" --force --delete --delete-excluded /srv/jenkins/amd64_base/amd64/* "${CHROOT}" || echo "rsync failed"
 
 if [[ -z ${WORKSPACE} ]]; then
     WORKSPACE=/home/jenkins/workspace/$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query ${GERRIT_CHANGE_NUMBER} | awk '$1~/project:/{print $NF}')
@@ -139,15 +112,33 @@ fi
 
 [[ ${PKG} == *::ocaml-unofficial* ]] && NICENESS=10
 
-set -e
+let CHROOT_NUM=1
+let CHROOT_MAX=20
+let FLOCKERR=126
+JENKINS_CHROOT_ARGS=(
+    "${TMPFILE}" "${PKG}" "${DEBUG}" "${WORKSPACE}" "${REPO}" "${BUILD_NUMBER:-0}" "${NICENESS}"
+)
 
-sudo /usr/bin/systemd-nspawn \
-    --bind=/home/jenkins/workspace:/var/db/paludis/gerrit \
-    --bind=/srv/www/localhost/htdocs/pbin:/var/db/paludis/repositories/pbin \
-    --capability=CAP_MKNOD \
-    -D "${CHROOT}" /usr/local/bin/cave_install.bash \
-    ${TMPFILE} "${PKG}" ${DEBUG} ${WORKSPACE} ${REPO} ${BUILD_NUMBER:-0} ${NICENESS}
+if [[ -n $1 ]] && [[ -d $1 ]]; then
+    CHROOT="$1"
 
-set +e
+    flock -n -E ${FLOCKERR} "/srv/jenkins/locks/${CHROOT//\//-}" -c \
+        ${0%/*}/jenkins_chroot.bash "${CHROOT}" "${JENKINS_CHROOT_ARGS[@]}"
+    ret=$?
+    [[ $ret -eq ${FLOCKERR} ]] && echo "Could not acquire lock on ${CHROOT}" >&2
+else
+    until [[ ${LOCK_ACQUIRED} == true ]]; do
+        NUM=$(( ( RANDOM % CHROOT_MAX ) + 1 ))
+        CHROOT="/srv/jenkins/amd64_${NUM}"
+
+        flock -n -E ${FLOCKERR} /srv/jenkins/locks/${NUM} -c \
+            ${0%/*}/jenkins_chroot.bash "${CHROOT}" "${JENKINS_CHROOT_ARGS[@]}"
+        ret=$?
+        [[ $ret -eq ${FLOCKERR} ]] || LOCK_ACQUIRED=true
+    done
+fi
 
 unset JENKINS_HOME
+
+exit $ret
+
