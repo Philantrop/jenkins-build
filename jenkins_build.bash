@@ -122,7 +122,7 @@ JENKINS_CHROOT_ARGS=(
 if [[ -n $1 ]] && [[ -d $1 ]]; then
     CHROOT="$1"
 
-    flock -n -E ${FLOCKERR} "/srv/jenkins/locks/${CHROOT//\//-}" -c \
+    flock -n -E ${FLOCKERR} "/srv/jenkins/locks/${CHROOT//\//-}" \
         ${0%/*}/jenkins_chroot.bash "${CHROOT}" "${JENKINS_CHROOT_ARGS[@]}"
     ret=$?
     [[ $ret -eq ${FLOCKERR} ]] && echo "Could not acquire lock on ${CHROOT}" >&2
@@ -131,7 +131,7 @@ else
         NUM=$(( ( RANDOM % CHROOT_MAX ) + 1 ))
         CHROOT="/srv/jenkins/amd64_${NUM}"
 
-        flock -n -E ${FLOCKERR} /srv/jenkins/locks/${NUM} -c \
+        flock -n -E ${FLOCKERR} /srv/jenkins/locks/${NUM} \
             ${0%/*}/jenkins_chroot.bash "${CHROOT}" "${JENKINS_CHROOT_ARGS[@]}"
         ret=$?
         [[ $ret -eq ${FLOCKERR} ]] || LOCK_ACQUIRED=true
