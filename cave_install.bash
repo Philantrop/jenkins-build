@@ -71,13 +71,13 @@ if [[ ${rc} -gt 0 ]]; then
     find /var/log/paludis -name "*${PKG/::*}*.out" -exec cp {} /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_build.log \;
 
 #    if [[ -n ${PKG} ]]; then
-#	find /var/db/paludis/repositories/pbin -iname "*${PKG/::*}*" -delete
+#        find /var/db/paludis/repositories/pbin -iname "*${PKG/::*}*" -delete
 #    fi
 else
     echo "**************************************************************"
     echo "Dependencies I believe to have found (excluding system):"
     #mscan ${PKG/::*}
-    /usr/bin/mscan2.rb -i system ${PKG/::*} 2>&1 | tee /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_dependencies.txt
+    /usr/bin/mscan2.rb --hide-libs unused -i system ${PKG/::*} 2>&1 | tee /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_dependencies.txt
     echo "**************************************************************"
 fi
 
