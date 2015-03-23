@@ -8,6 +8,27 @@ if [[ -z ${REPO_URI} || -z ${REPO_NAME} ]]; then
     exit 1
 fi
 
+pushd /tmp
+TMP_REPO_PATH=$(mktemp --directory -u)
+git clone "${REPO_URI}" "${TMP_REPO_PATH}"
+
+if [[ ! -d ${TMP_REPO_PATH} ]]; then
+    echo "cloning failed"
+    exit 2
+fi
+
+AUTO_REPO_NAME=$(cat "${TMP_REPO_PATH}"/profiles/repo_name)
+
+if [[ ! ${REPO_NAME} == ${AUTO_REPO_NAME} ]]; then
+    rm -rf "${TMP_REPO_PATH}"
+    echo "<REPO_NAME> *must* be identical with the repository's actual name (profiles/repo_name)"
+    exit 10
+fi
+
+rm -rf "${TMP_REPO_PATH}"
+REPO_NAME=${AUTO_REPO_NAME}
+popd
+
 case "${REPO_URI}" in
     *github*)
         HOSTER=github
@@ -246,9 +267,11 @@ EOF
     pushd /var/cache/tomcat/gerrit/etc
 
     cat <<EOF > /tmp/replication.config
-# -----FIX THE URL LINE BELOW AND DELETE THIS LINE ------------
+# -----CHECK THE ENTRY BELOW AND DELETE THIS LINE ------------
 [remote "Exherbo-${HOSTER}-${REPO_NAME}"]
-  url = git@${HOSTER}.com:${REPO_NAME}/\${name}-exheres.git
+  projects = ${REPO_NAME}
+  url = ${REPO_URI}
+# url = git@${HOSTER}.com:${REPO_NAME}/\${name}-exheres.git
   push = refs/heads/*:refs/heads/*
   timeout = 15
   replicationDelay = 0
@@ -256,7 +279,7 @@ EOF
   createMissingRepositories = false
   threads = 4
   authGroup = Exherbo-${HOSTER}-${REPO_NAME}-replication
-# -----FIX THE URL LINE ABOVE AND DELETE THIS LINE ------------
+# -----CHECK THE ENTRY ABOVE AND DELETE THIS LINE ------------
 
 EOF
 
