@@ -45,12 +45,13 @@ Once you run the script, a lot of git output will be displayed. If anything goes
 
 Afterwards, simply start this process over.
 
-- If all went well, emacs opens so you can edit the new replication entry:
+- If all went well, emacs opens so you can check the new replication entry:
 
-
-# -----FIX THE URL LINE BELOW AND DELETE THIS LINE ------------
+# -----CHECK THE ENTRY BELOW AND DELETE THIS LINE ------------
 [remote "Exherbo-github-jedahan"]
-  url = git@github.com:jedahan/${name}-exheres.git
+  projects = jedahan
+  url = git@github.com:jedahan/exheres.git
+# url = git@github.com:jedahan/\${name}-exheres.git
   push = refs/heads/*:refs/heads/*
   timeout = 15
   replicationDelay = 0
@@ -58,19 +59,9 @@ Afterwards, simply start this process over.
   createMissingRepositories = false
   threads = 4
   authGroup = Exherbo-github-jedahan-replication
-# -----FIX THE URL LINE ABOVE AND DELETE THIS LINE ------------
+# -----CHECK THE ENTRY ABOVE AND DELETE THIS LINE ------------
 
-You ABSOLUTELY MUST use ${name} in the "url" line. So, the above default entry becomes:
-
-[remote "Exherbo-github-jedahan"]
-  url = git@github.com:${name}/exheres.git
-  push = refs/heads/*:refs/heads/*
-  timeout = 15
-  replicationDelay = 0
-  replicatePermissions = false
-  createMissingRepositories = false
-  threads = 4
-  authGroup = Exherbo-github-jedahan-replication
+If everything looks fine (check for the "projects" key the value of which *MUST* match the repository name and the "url" key), delete the commented "url" key and the two framing lines.
 
 - Check that the repository now exists in both Gerrit and Jenkins.
 
