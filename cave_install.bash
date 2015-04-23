@@ -14,6 +14,19 @@ chgrp tty /dev/tty
 source /etc/profile
 stty columns 80 rows 40
 
+PALUDIS_NO_WRITE_CACHE_CLEAN="YesPlease"
+CAVE_OPTIONS="--log-level warning"
+
+J_CAVE_RESOLVE_OPTIONS=(
+    -z
+    --promote-binaries if-same
+    --skip-phase test
+    --change-phases-for \!targets
+    --via-binary '*/*'
+    --continue-on-failure never
+    --recommendations display
+)
+
 [[ ${DEBUG} -eq 1 ]] && ls /
 [[ ${DEBUG} -eq 1 ]] && echo "TMPFILE: ${TMPFILE}"
 
@@ -53,16 +66,16 @@ fi
 
 [[ ${DEBUG} -eq 1 ]] && echo ARGS: ${ARGS}
 
-echo cave resolve -z --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS} &> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
+echo cave resolve "${J_CAVE_RESOLVE_OPTIONS[@]}" ${PKG} ${ARGS} &> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
 echo >> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
-cave resolve -z --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS} &>> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
+cave resolve "${J_CAVE_RESOLVE_OPTIONS[@]}" ${PKG} ${ARGS} &>> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
 echo >> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
 
 echo "**************************************************************"
 echo "cave resolve command"
-echo cave resolve -zx --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS}
-echo cave resolve -zx --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS} &>> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
-[[ ${DEBUG} -eq 0 ]] && cave resolve -zx --promote-binaries if-same --skip-phase test --change-phases-for \!targets ${PKG} ${ARGS}
+echo cave resolve "${J_CAVE_RESOLVE_OPTIONS[@]}" -x ${PKG} ${ARGS}
+echo cave resolve "${J_CAVE_RESOLVE_OPTIONS[@]}" -x ${PKG} ${ARGS} &>> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-resolve.txt
+[[ ${DEBUG} -eq 0 ]] && cave resolve "${J_CAVE_RESOLVE_OPTIONS[@]}" -x ${PKG} ${ARGS}
 rc=$?
 
 if [[ ${rc} -gt 0 ]]; then
