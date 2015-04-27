@@ -19,6 +19,7 @@ CAVE_OPTIONS="--log-level warning"
 
 J_CAVE_RESOLVE_OPTIONS=(
     -z
+    --no-follow-installed-dependencies
     --promote-binaries if-same
     --skip-phase test
     --change-phases-for \!targets
