@@ -15,6 +15,8 @@ EXECUTE=$(cat)
 
 sudo /usr/bin/systemd-nspawn \
     "${NSPAWN_ARGS[@]}" \
+    --bind=/srv/www/localhost/htdocs/pbin:/var/db/paludis/repositories/pbin \
+    --bind=/home/jenkins/workspace:/var/db/paludis/gerrit \
     --bind="${WORKSPACE}":/var/db/paludis/gerrit/${JOB_NAME} \
     -D "${CHROOT}" /bin/bash -c "${EXECUTE}"
 
