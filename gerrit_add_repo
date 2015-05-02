@@ -1,5 +1,10 @@
 source /srv/tomcat/bin/data
 
+if [[ ${UID} == 0 ]]; then
+    echo "You must be the right user to run this script"
+    exit 1
+fi
+
 REPO_URI=$1
 REPO_NAME=$2
 
