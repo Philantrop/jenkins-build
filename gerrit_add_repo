@@ -337,3 +337,7 @@ if [[ $(git --git-dir="${REPOPATH}/${REPO_NAME}.git" ls-tree -r --name-only mast
     sudo ln -sf philantrop.bash /etc/paludis-jenkins-pbins/repositories/${REPO_NAME}.bash
 fi
 
+# Add the repository to GerritBot & restart it
+sudo sed -i -e "/- wgetpaste/a\ \ \ \ \ \ - ${REPO_NAME}" /home/krueger/gerritbot_chan.conf
+sudo systemctl restart gerritwk23.service
+
