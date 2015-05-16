@@ -31,7 +31,7 @@ popd &>/dev/null
 diff -q /srv/jenkins/amd64_base/amd64/usr/local/bin/cave_install.bash ${0%/*}/cave_install.bash || sudo cp -av ${0%/*}/cave_install.bash /srv/jenkins/amd64_base/amd64/usr/local/bin/cave_install.bash
 
 if [[ -z ${WORKSPACE} ]]; then
-    WORKSPACE=/home/jenkins/workspace/$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query ${GERRIT_CHANGE_NUMBER} | awk '$1~/project:/{print $NF}')
+    WORKSPACE=/home/jenkins/workspace/$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query ${GERRIT_CHANGE_NUMBER} | /usr/bin/awk '$1~/project:/{print $NF}')
 fi
 
 PROJECT_TO_REPO=(
@@ -49,13 +49,13 @@ REPO=$(<profiles/repo_name)
 [[ -z $REPO ]] && give_up Empty repo_name
 
 if [[ -n ${GERRIT_CHANGE_NUMBER} ]]; then
-    CHANGEID=$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query ${GERRIT_CHANGE_NUMBER} | awk '$1~/^id:$/{print $NF}')
-    GITCHANGEID=$(git show --pretty='%b' -s | awk '$1~/^Change-Id:/{print $NF}')
+    CHANGEID=$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query ${GERRIT_CHANGE_NUMBER} | /usr/bin/awk '$1~/^id:$/{print $NF}')
+    GITCHANGEID=$(git show --pretty='%b' -s | /usr/bin/awk '$1~/^Change-Id:/{print $NF}')
     [[ ${CHANGEID} == ${GITCHANGEID} ]] && PKG=$(bash -x ${0%/*}/find_targets.bash 2> ${BUILD_NUMBER:-0}_find_targets_build.log)
     if [[ -z ${PKG} ]]; then
-        PKG=$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query --files --current-patch-set change:${GERRIT_CHANGE_NUMBER} | awk -F/ '$1~/project:/{repo=$0};$1~/file:\ packages/{print $2"/"$3"::"repo}' | sed -e 's/::  project: \(.*\)$/::\1/' | sort -u | xargs)
+        PKG=$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query --files --current-patch-set change:${GERRIT_CHANGE_NUMBER} | /usr/bin/awk -F/ '$1~/project:/{repo=$0};$1~/file:\ packages/{print $2"/"$3"::"repo}' | sed -e 's/::  project: \(.*\)$/::\1/' | sort -u | xargs)
         if [[ -z ${PKG} ]]; then
-            EXLIB=$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query --files --current-patch-set change:${GERRIT_CHANGE_NUMBER} | awk -F/ '$1~/file: exlibs/{print $2}' | sort -u | xargs)
+            EXLIB=$(/usr/bin/ssh -x -p ${PORT} ${SSH_USER}@${SERVER} -- gerrit query --files --current-patch-set change:${GERRIT_CHANGE_NUMBER} | /usr/bin/awk -F/ '$1~/file: exlibs/{print $2}' | sort -u | xargs)
             if [[ -n ${EXLIB} ]]; then
                 echo "Change ${GERRIT_CHANGE_NUMBER} is for ${EXLIB}. Not sure what to do. Exiting."
                 exit 0
@@ -93,11 +93,11 @@ if [[ -z ${GERRIT_CHANGE_NUMBER} ]]; then
     else
         PKG=$(bash -x ${0%/*}/find_targets.bash 2> ${BUILD_NUMBER:-0}_find_targets_build.log)
         if [[ -z ${PKG} ]]; then
-            PKG=$(git show --pretty=format:"" --name-only --no-color HEAD | grep -v "^$" | awk -F/ '$1~/packages/{print $2"/"$3}' | sort -u | xargs)
+            PKG=$(git show --pretty=format:"" --name-only --no-color HEAD | grep -v "^$" | /usr/bin/awk -F/ '$1~/packages/{print $2"/"$3}' | sort -u | xargs)
             if [[ -n ${PKG} ]]; then PKG+="::${REPO}"; fi
         fi
         if [[ -z ${PKG} ]]; then
-            EXLIB=$(git show --pretty=format:"" --name-only --no-color HEAD | grep -v "^$" | awk -F/ '$1~/exlibs/{print $2}' | sort -u | xargs)
+            EXLIB=$(git show --pretty=format:"" --name-only --no-color HEAD | grep -v "^$" | /usr/bin/awk -F/ '$1~/exlibs/{print $2}' | sort -u | xargs)
             if [[ -n ${EXLIB} ]]; then
                 echo "git HEAD is for ${EXLIB}. Not sure what to do. Exiting."
                 exit 0
