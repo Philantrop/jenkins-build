@@ -87,14 +87,20 @@ if [[ ${rc} -gt 0 ]]; then
 #        find /var/db/paludis/repositories/pbin -iname "*${PKG/::*}*" -delete
 #    fi
 else
-    echo "**************************************************************"
-    echo "Package contents:"
-    cave print-id-contents "${PKG/::*}" 2>&1 | tee /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-print-id-contents.txt
-    echo "**************************************************************"
-    echo "Dependencies I believe to have found (excluding system):"
-    #mscan ${PKG/::*}
-    /usr/bin/mscan2.rb --hide-libs unused -i system ${PKG/::*} 2>&1 | tee /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_dependencies.txt
-    echo "**************************************************************"
+    touch /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_{cave-print-id-contents,dependencies}.txt
+    for package in ${PKG};do
+        echo "**************************************************************"
+        echo "Package contents:"
+        echo "${package/::*}:" >> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-print-id-contents.txt
+        cave print-id-contents "${package/::*}" 2>&1 | tee -a /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_cave-print-id-contents.txt
+        echo "**************************************************************"
+        echo "Dependencies I believe to have found (excluding system):"
+        #mscan ${PKG/::*}
+        echo "${package/::*}:" >> /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_dependencies.txt
+        /usr/bin/mscan2.rb --hide-libs unused -i system ${package/::*} 2>&1 | tee -a /var/db/paludis/gerrit/${WORKSPACE##*/}/${BUILDNO}_dependencies.txt
+        echo "**************************************************************"
+        echo
+    done
 fi
 
 exit ${rc}
