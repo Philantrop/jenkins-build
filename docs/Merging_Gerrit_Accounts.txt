@@ -13,9 +13,15 @@
     In the list, look for duplicate names, e. g. "Foo Bar" here:
 
     |        400 | Foo Bar              | foo@bar.net                     | 2015-05-08 17:31:58 |
-    |       1380 | Foo Bar              | foor_bar@gmail.com              | 2015-06-16 01:47:44 |
+    |       1380 | Foo Bar              | foo_bar@gmail.com              | 2015-06-16 01:47:44 |
 
     If there are no duplicates, the user lies. Otherwise, proceed to 4.
+
+    If there are more than two accounts for the same person, you just repeat step 4
+    as often as needed.
+
+    If there are more than one duplicate accounts, e. g. twice "Foo Bar" and twice
+    "Bar Baz", you just repeat step 4 several times.
 
 4. Insert both related IDs into the "links" table, e. g.
 
