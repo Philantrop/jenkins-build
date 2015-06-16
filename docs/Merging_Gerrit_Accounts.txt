@@ -1,0 +1,47 @@
+1. Log in to the database:
+
+    mysql -u $MYSQL_USER -p$MYSQL_PWD $MYSQL_DB
+
+2. Let Gerrit find duplicate accounts:
+
+    source /usr/local/bin/gerrit_load_merge.sql;
+
+    If that gives you an "empty set" or a different result from what you expect,
+    continue with 3.
+
+3. select account_id,full_name,preferred_email,registered_on from accounts order by full_name;
+    In the list, look for duplicate names, e. g. "Foo Bar" here:
+
+    |        400 | Foo Bar              | foo@bar.net                     | 2015-05-08 17:31:58 |
+    |       1380 | Foo Bar              | foor_bar@gmail.com              | 2015-06-16 01:47:44 |
+
+    If there are no duplicates, the user lies. Otherwise, proceed to 4.
+
+4. Insert both related IDs into the "links" table, e. g.
+
+    # insert into links values(duplicate,original);
+    insert into links values(1380,400);
+
+    You should always merge both accounts into the *older* one. There can be
+    exceptions, though, on a case-by-case base.
+
+5. Run the actual merge:
+
+    source /usr/local/bin/gerrit_merge_accounts.sql;
+    commit;
+    quit;
+
+    Note that you *must* commit *and* leave the mysql client at this point.
+
+6. Check the result:
+
+    select account_id,full_name,preferred_email,registered_on from accounts order by full_name;
+
+    In our example, the ID 1380 should be gone.
+
+7. Tell the user his account was merged. If it doesn't work immediately, he needs
+   to log out and log in again. If it still doesn't work (has yet to happen), tell
+   him to clear his cookies from galileo.mailstation.de *and* his cache.
+   If it *still* doesn't work, show me *exactly* what you did. I might have to
+   forcefully convince Gerrit to accept the merge (has happened once so far and
+   might have been my fault :-) ).
