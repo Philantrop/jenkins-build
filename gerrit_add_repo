@@ -41,6 +41,9 @@ case "${REPO_URI}" in
     *gitorious*)
         HOSTER=gitorious
     ;;
+    *bitbucket*)
+        HOSTER=bitbucket
+    ;;
     *git.exherbo.org*)
         HOSTER=Exherbo
     ;;
