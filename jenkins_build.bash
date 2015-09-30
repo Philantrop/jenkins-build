@@ -131,9 +131,28 @@ else
         NUM=$(( ( RANDOM % CHROOT_MAX ) + 1 ))
         CHROOT="/srv/jenkins/amd64_${NUM}"
 
-        flock -n -E ${FLOCKERR} /srv/jenkins/locks/${NUM} \
-            ${0%/*}/jenkins_chroot.bash "${CHROOT}" "${JENKINS_CHROOT_ARGS[@]}"
-        ret=$?
+        CHROOT_TEST=$(flock -n -E ${FLOCKERR} /srv/jenkins/locks/${NUM} sudo /usr/bin/systemd-nspawn -D "${CHROOT}" busybox echo)
+        testret=$?
+        if [[ $testret -eq 0 ]]; then
+            echo "Test systemd-nspawn chroot succeeded"
+            flock -n -E ${FLOCKERR} /srv/jenkins/locks/${NUM} \
+                ${0%/*}/jenkins_chroot.bash "${CHROOT}" "${JENKINS_CHROOT_ARGS[@]}"
+            ret=$?
+        else
+            if [[ $testret -eq ${FLOCKERR} ]]; then
+                continue
+            elif echo "${CHROOT_TEST}" | grep -q "Failed to register machine: Unit .* already exists."; then
+                echo "$testret - $(date) - ${CHROOT_TEST}" >> /tmp/jenkins_chroot_test.log
+                echo "Left over scope detected - err $testret"
+                echo "${CHROOT_TEST}"
+                continue
+            elif echo "${CHROOT_TEST}" | grep -q "Directory tree /srv/jenkins/.* is currently busy."; then
+                echo "$testret - $(date) - ${CHROOT_TEST}" >> /tmp/jenkins_chroot_test.log
+                echo "Something is missing a lock on ${CHROOT} - err $testret"
+                echo "${CHROOT_TEST}"
+                continue
+            fi
+        fi
         [[ $ret -eq ${FLOCKERR} ]] || LOCK_ACQUIRED=true
     done
 fi
