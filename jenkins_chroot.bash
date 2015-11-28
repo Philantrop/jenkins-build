@@ -22,7 +22,7 @@ fi
 sudo /usr/bin/systemd-nspawn \
     --bind=/home/jenkins/workspace:/var/db/paludis/gerrit \
     --bind=/srv/www/localhost/htdocs/pbin:/var/db/paludis/repositories/pbin \
-    --capability=CAP_MKNOD \
+    --capability=all \
     -D "${CHROOT}" /usr/local/bin/cave_install.bash \
     ${TMPFILE} "${PKG}" ${DEBUG} ${WORKSPACE} ${REPO} ${BUILD_NUMBER:-0} ${NICENESS}
 
