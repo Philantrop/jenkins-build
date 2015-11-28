@@ -119,6 +119,7 @@ JENKINS_CHROOT_ARGS=(
     "${TMPFILE}" "${PKG}" "${DEBUG}" "${WORKSPACE}" "${REPO}" "${BUILD_NUMBER:-0}" "${NICENESS}"
 )
 
+set -x
 if [[ -n $1 ]] && [[ -d $1 ]]; then
     CHROOT="$1"
 
@@ -156,6 +157,7 @@ else
         [[ $ret -eq ${FLOCKERR} ]] || LOCK_ACQUIRED=true
     done
 fi
+set +x
 
 unset JENKINS_HOME
 
