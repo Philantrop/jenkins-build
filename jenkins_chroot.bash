@@ -14,7 +14,10 @@ NICENESS=${8}
 #[[ -d /srv/jenkins/amd64_base/amd64/var/db/paludis/gerrit ]] && sudo rmdir /srv/jenkins/amd64_base/amd64/var/db/paludis/gerrit
 #[[ -d /srv/jenkins/amd64_base/amd64/var/db/paludis/repositories/pbin ]] && sudo rmdir /srv/jenkins/amd64_base/amd64/var/db/paludis/repositories/pbin
 
-[[ ${DEBUG} -eq 0 ]] && sudo rsync -aHx --exclude="*~" --force --delete --delete-excluded /srv/jenkins/amd64_base/amd64/* "${CHROOT}" || echo "rsync failed"
+if [[ ${DEBUG} -eq 0 ]]; then
+    echo rsync -aHx --exclude="*~" --force --delete --delete-excluded "/srv/jenkins/amd64_base/amd64/*" "${CHROOT}"
+    sudo rsync -aHx --exclude="*~" --force --delete --delete-excluded /srv/jenkins/amd64_base/amd64/* "${CHROOT}" || echo "rsync failed"
+fi
 
 sudo /usr/bin/systemd-nspawn \
     --bind=/home/jenkins/workspace:/var/db/paludis/gerrit \
