@@ -23,6 +23,7 @@ formats=""
 while read f; do
     # match exact exheres
     if [[ $f == *.exheres-0 ]]; then
+	[[ $f == *chromium-beta* ]] && continue
 	matching="*/*::${repo}[.EXHERES=${PWD}/${f}]"
     elif [[ $f == *.exlib ]]; then
 	exlib=${f##*/}
@@ -34,6 +35,8 @@ while read f; do
 	    cat=${f#packages/}
 	    cat=${cat%%/*}
 	    matching="${cat}/*::${repo}[.INHERITED<${exlib%.exlib}]"
+	    # hack to pick chromium-stable on chromium.exlib
+	    [[ $f == packages/net-www/exlibs/chromium.exlib ]] && matching="*/chromium-stable::${repo}"
 	elif [[ ${f} == packages/*/*/*.exlib ]]; then
 	    # match per package exlib
 	    pkg=${f#packages/}
