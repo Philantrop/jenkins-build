@@ -22,16 +22,18 @@ if [[ ! -d ${TMP_REPO_PATH} ]]; then
     exit 2
 fi
 
-AUTO_REPO_NAME=$(cat "${TMP_REPO_PATH}"/profiles/repo_name)
+if [[ -f "${TMP_REPO_PATH}"/profiles/repo_name ]]; then
+    AUTO_REPO_NAME=$(cat "${TMP_REPO_PATH}"/profiles/repo_name)
 
-if [[ ! ${REPO_NAME} == ${AUTO_REPO_NAME} ]]; then
-    rm -rf "${TMP_REPO_PATH}"
-    echo "<REPO_NAME> *must* be identical with the repository's actual name (profiles/repo_name)"
-    exit 10
+    if [[ ! ${REPO_NAME} == ${AUTO_REPO_NAME} ]]; then
+        rm -rf "${TMP_REPO_PATH}"
+        echo "<REPO_NAME> *must* be identical with the repository's actual name (profiles/repo_name)"
+        exit 10
+    fi
+    REPO_NAME=${AUTO_REPO_NAME}
 fi
 
 rm -rf "${TMP_REPO_PATH}"
-REPO_NAME=${AUTO_REPO_NAME}
 popd
 
 case "${REPO_URI}" in
