@@ -1,0 +1,32 @@
+source /srv/tomcat/bin/data
+
+if [[ ${UID} == 0 ]]; then
+    echo "You must be the right user to run this script"
+    exit 1
+fi
+
+REPO_NAME=$1
+
+if [[ -z ${REPO_NAME} ]]; then
+    echo "$0 <REPO_NAME>"
+    exit 1
+fi
+
+pushd "${REPOPATH}"
+rm -rf "${REPO_NAME}"
+popd
+
+ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit flush-caches --cache project_list
+
+
+# Add Jenkins task
+rm -rf /tmp/jenkins
+mkdir /tmp/jenkins
+pushd /tmp/jenkins
+wget https://${SERVER}/jenkins/jnlpJars/jenkins-cli.jar
+
+java -jar jenkins-cli.jar -i ~/.ssh/id_dsa -s https://${SERVER}/jenkins/ delete-job ${REPO_NAME}
+
+popd
+rm -rf /tmp/jenkins
+
