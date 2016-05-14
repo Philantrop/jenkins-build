@@ -104,7 +104,7 @@ sudo chown -R ${USER}:${GROUP} "${REPO_NAME}.git"
 sudo chmod -R a+rwx "${REPO_NAME}.git"
 
 ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit flush-caches --cache project_list
-ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit set-project --submit-type REBASE_IF_NECESSARY --ps "${REPO_STATE}"  "${REPO_NAME}"
+ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit set-project --submit-type "${GERRIT_STRATEGY}" --ps "${REPO_STATE}" "${REPO_NAME}"
 ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit flush-caches --cache project_list
 
 pushd "${REPOPATH}/${REPO_NAME}.git"
@@ -135,7 +135,7 @@ if [[ -z ${REPO_OWNER} ]]; then
 
 cat <<EOF > project.config
 [submit]
-        action = rebase if necessary
+        action = "${GERRIT_STRATEGY_LONG}"
 [access "refs/heads/*"]
         read = group Exherbo-${REPLICATION_GROUP}-replication
 EOF
@@ -218,7 +218,7 @@ echo "\
 
 cat <<EOF > project.config
 [submit]
-        action = rebase if necessary
+        action = "${GERRIT_STRATEGY_LONG}"
 [access "refs/heads/*"]
         owner = group ${REPO_OWNER_USERNAME}
         read = group Exherbo-${HOSTER}-${REPO_NAME}-replication
