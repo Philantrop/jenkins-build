@@ -8,12 +8,12 @@ fi
 REPO_NAME=$1
 
 if [[ -z ${REPO_NAME} ]]; then
-    echo "$0 <REPO_NAME>"
+    echo "$0 <REPO_NAME> (without .git)"
     exit 1
 fi
 
 pushd "${REPOPATH}"
-rm -rf "${REPO_NAME}"
+rm -rf "${REPO_NAME}".git
 popd
 
 ssh -p ${PORT} ${SSH_USER}@${SERVER} gerrit flush-caches --cache project_list
