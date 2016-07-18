@@ -24,7 +24,6 @@ pushd /home/jenkins/workspace &>/dev/null
 for repo in $(ls); do
     pushd "${x}" &>/dev/null
     git pull &>/dev/null
-    sudo chmod -R a+r *
     popd &>/dev/null
 done
 popd &>/dev/null
@@ -45,6 +44,7 @@ PROJECT_TO_REPO=(
 )
 
 pushd ${WORKSPACE}
+sudo chmod -R a+r *
 [[ ! -e profiles/repo_name ]] && give_up No repo_name
 REPO=$(<profiles/repo_name)
 [[ -z $REPO ]] && give_up Empty repo_name
