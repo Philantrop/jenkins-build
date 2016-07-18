@@ -24,7 +24,7 @@ pushd /home/jenkins/workspace &>/dev/null
 for repo in $(ls); do
     pushd "${x}" &>/dev/null
     git pull &>/dev/null
-    chmod -R a+r *
+    sudo chmod -R a+r *
     popd &>/dev/null
 done
 popd &>/dev/null
