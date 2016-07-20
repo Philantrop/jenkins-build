@@ -44,7 +44,7 @@ PROJECT_TO_REPO=(
 )
 
 pushd ${WORKSPACE}
-sudo chmod -R a+r *
+sudo chmod -R a+rx *
 [[ ! -e profiles/repo_name ]] && give_up No repo_name
 REPO=$(<profiles/repo_name)
 [[ -z $REPO ]] && give_up Empty repo_name
