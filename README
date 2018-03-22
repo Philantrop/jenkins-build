@@ -1,0 +1,5 @@
+These scripts were used to interface Exherbo's Gerrit and Jenkins for integration testing of patches and more.
+
+They're not used anymore in production but may still be useful for someone.
+
+Everything here's licenced under the GPLv3 (cf. GPL-3).
